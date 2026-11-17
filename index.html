@@ -80,6 +80,9 @@
   .search svg{width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round}
   .search input{background:transparent;padding:14px 0;border:0}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tile{position:relative}
+  .kb{position:absolute;top:26px;left:24px;font-style:normal;font-size:12.5px;font-weight:700;color:#fbf8f1;background:rgba(113,60,67,.92);padding:5px 11px;border-radius:999px;letter-spacing:.01em}
+  .kb2{display:inline-block;font-size:15px;font-weight:700;color:#fbf8f1;background:#713C43;padding:7px 16px;border-radius:999px}
   .tile{border-radius:28px;padding:16px 14px 16px;cursor:pointer;display:flex;flex-direction:column}
   .tile svg{width:100%;height:120px}
   .tile b{font-size:14px;font-weight:600;line-height:1.25;margin-top:6px}
@@ -1422,7 +1425,7 @@ function renderReceitas(){
     if(recFiltro&&!r.tags.includes(recFiltro))return; if(q&&!r.t.toLowerCase().includes(q))return;
     if(comp&&!compat(r))return;
     const t=rec(r);
-    h+=`<div class="tile t${i%4}" onclick="abrirReceita(${i})">${foto(r,i,'a')}<b>${r.t}</b><span>${Math.round(t.k)} kcal · ${Math.round(t.p)} g prot.</span></div>`;
+    h+=`<div class="tile t${i%4}" onclick="abrirReceita(${i})">${foto(r,i,'a')}<i class="kb">${Math.round(t.k)} kcal</i><b>${r.t}</b><span>${Math.round(t.p)} g de proteína por porção</span></div>`;
   });
   $('receitasOut').innerHTML=h||'<div class="card sand">Nenhuma receita encontrada.</div>';
 }
@@ -1435,7 +1438,7 @@ function abrirReceita(i){
     <div style="margin-top:8px">${foto(r,i,'a')}</div>
     <h1 style="font-size:32px;margin:22px 0 6px">${r.t}</h1>
     <div class="sub" style="text-align:center">${r.tags.map(x=>TAGNOME[x]).join(' · ')} · ${r.min} min · rende ${r.por} ${r.por>1?'porções':'porção'}${ok&&dados?' · combina comigo':''}</div>
-    <div class="sub" style="text-align:center;margin-top:4px">Por porção: ${Math.round(t.k)} kcal</div>
+    <div style="text-align:center;margin-top:10px"><span class="kb2">${Math.round(t.k)} kcal por porção</span></div>
     <div class="macs">${mt('Gordura',t.g,'','g')}${mt('Proteína',t.p,'','p')}${mt('Carbo',t.c,'','c')}</div>
     <div class="card"><h2>Ingredientes</h2><ul class="ing" style="margin-top:8px">${r.ing.map(([id,g])=>`<li${ALIMENTOS_ATIVO&&F[id].t&&ALIMBY[F[id].t]?` class="lk" onclick="abrirAlimento(${F[id].t})"`:''}>${medida(F[id],g)}</li>`).join('')}${r.extra?`<li>${r.extra}</li>`:''}</ul>
     <h3>Modo de preparo</h3><ol>${r.passos.map(s=>`<li>${s}</li>`).join('')}</ol>
