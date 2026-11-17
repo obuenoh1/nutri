@@ -80,6 +80,12 @@
   .search svg{width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round}
   .search input{background:transparent;padding:14px 0;border:0}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .fotoup{margin:12px 0 14px;border-radius:22px;overflow:hidden;background:#f7f1e4}
+  .fu-ph{aspect-ratio:4/3!important;border:2px dashed #c8ad83;border-radius:22px 22px 0 0;box-sizing:border-box}
+  .fu-ph.noimg{background:linear-gradient(160deg,#ecdfcb,#d8c6ac)}
+  .fu-ph.noimg .mv-txt{top:auto;bottom:0;transform:none;color:#3f2227}.fu-ph.noimg .mv-txt h2{color:#3f2227}
+  .fu-btn{position:absolute;top:12px;right:12px;cursor:pointer;padding:10px 18px;border-radius:999px;background:#713C43;color:#fbf8f1;font-weight:600;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:2}
+  .fu-n{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;font-size:12.5px;color:#756052}
   .tile{position:relative}
   .kb{position:absolute;top:26px;left:24px;font-style:normal;font-size:12.5px;font-weight:700;color:#fbf8f1;background:rgba(113,60,67,.92);padding:5px 11px;border-radius:999px;letter-spacing:.01em}
   .kb2{display:inline-block;font-size:15px;font-weight:700;color:#fbf8f1;background:#713C43;padding:7px 16px;border-radius:999px}
@@ -1811,9 +1817,9 @@ function renderAdmin(){
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
     h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
-      <div class="mcard-b"><div class="fotobox">${(meal.foto||meal.prato)?`<img src="${meal.foto||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="" onerror="this.outerHTML='<div class=fb-v>Sem foto</div>'">`:'<div class="fb-v">Sem foto</div>'}
-        <div class="fb-a"><b>Foto do prato</b><span>${meal.foto?'Foto anexada por você.':'Foto padrão do prato.'}</span>
-        <label class="mini light fb-b">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
+      <div class="mcard-b"><div class="fotoup"><div class="mv-ph${(meal.foto||meal.prato)?'':' noimg'} fu-ph">${(meal.foto||meal.prato)?`<img src="${meal.foto||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div><div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2></div>
+          <label class="fu-btn">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label></div>
+        <div class="fu-n"><span>${meal.foto?'Foto anexada por você. É assim que a cliente vê.':'Esta é a área da foto, exatamente como a cliente vê, acima do texto da refeição.'}</span>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
       <input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="setMealCampo(${mi},'desc',this.value)" style="margin-top:8px">
       `;
     meal.itens.forEach((it,ii)=>{
