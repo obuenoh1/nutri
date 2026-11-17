@@ -626,6 +626,33 @@
   .aceite{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:13px;color:#756052;line-height:1.3}
   .aceite input{width:20px;height:20px;margin-top:1px;flex:none}
   #dem{width:100%;box-sizing:border-box;margin-bottom:10px}
+
+  .admsum{display:block}.admsum .bars{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;width:100%}
+  .admsum .bar .bt{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;opacity:.95}.admsum .bar .bt b{font-size:14px}.admsum .bar .bt small{font-weight:400;opacity:.8;font-size:11px}
+  .admsum .bf{height:5px;border-radius:5px;background:rgba(245,240,230,.25);margin-top:4px;overflow:hidden}.admsum .bf i{display:block;height:100%;border-radius:5px;background:#C8AD83}
+  .admsum .bar.ok .bf i{background:#a9c08a}.admsum .bar.alto .bf i{background:#e0a08a}
+  .admsum>.mini{margin:10px 0 0;width:100%}
+  details.mcard{background:#fbf8f1;border-radius:18px;margin-bottom:10px;box-shadow:0 6px 18px rgba(67,36,42,.06);overflow:hidden}
+  details.mcard>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+  details.mcard>summary::-webkit-details-marker{display:none}
+  details.mcard>summary::after{content:'›';font-size:22px;color:#8a7a70;transition:transform .2s;margin-left:2px}
+  details.mcard[open]>summary::after{transform:rotate(90deg)}
+  .ms-a{flex:1;min-width:0}.ms-a b{display:block;font-size:14px}.ms-a span{display:block;font-size:12.5px;color:#756052;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .ms-k{text-align:right}.ms-k b{display:block;font-size:14px;color:#713C43}.ms-k small{font-size:11px;color:#8a7a70}
+  .mcard-b{padding:2px 16px 16px}
+  .row2{display:flex;gap:10px}.row2>div{flex:1;min-width:0}.row2 input{width:100%;box-sizing:border-box}
+  .il{grid-template-columns:1fr;gap:8px}
+  .il-q{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .stp .qi{width:54px;border:0;background:transparent;text-align:center;font-weight:700;font-size:15px;padding:0;margin:0;color:#3f2227}
+  .il-q .un{font-size:12.5px;color:#756052}
+  .gi{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:13px;color:#756052}.gi input{width:62px;text-align:right;padding:8px 8px}
+  .il>.mini{grid-column:auto}
+  .resb small{display:block;font-weight:400;color:#756052;font-size:11.5px;margin-top:1px}.resb b{font-weight:600}
+  .obs{background:#efe7d8;border-radius:14px;padding:12px 14px;margin:14px 0 4px}.obs b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#756052}.obs p{margin:4px 0 0;font-size:14px}
+
+  details.mcard>summary{text-decoration:none;text-align:left;color:var(--ink);font-size:13px}
+  details.mcard{margin-top:0;font-size:13px}
+  .ms-a b,.ms-a span,.ms-k b,.ms-k small{text-decoration:none}
 </style>
 </head>
 <body>
@@ -1106,6 +1133,39 @@ const pickOf=a=>a[Math.floor(Math.random()*a.length)];
 /* Estratégia por objetivo: densidade calórica do prato (kcal por g). Emagrecer prefere pratos leves e volumosos;
    ganhar massa prefere pratos mais calóricos; manter sorteia sem preferência. */
 function densPrato(it){let k=0,g=0;it.forEach(i=>{const f=F[i.f];k+=f.k*i.g/100;g+=i.g;});return g?k/g:0;}
+/* Plano padrão: a mesma dieta para todas as pessoas do mesmo objetivo; só as quantidades mudam com a meta.
+   A ordem abaixo é a prioridade de cada refeição. Se a cliente não come algo (ou tem restrição), vale o próximo prato da lista. */
+const PADRAO={
+ emagrecer:{
+  cafe:['pao_integral_com_ovo_e_mamao','cuscuz_com_ovo_e_mamao','overnight_de_aveia_e_chia_com_morango','granola_com_iogurte_e_kiwi','cereal_com_leite_desnatado_e_banana','cuscuz_com_queijo_branco_e_melao','pao_integral_com_ricota_e_uvas'],
+  lanche:['iogurte_com_chia_e_kiwi','iogurte_com_granola_e_morango','pudim_de_chia_com_leite_desnatado_e_manga','cuscuz_com_ovo_e_mexerica','castanhas_e_laranja','iogurte_com_cereal_e_uvas','vitamina_proteica_de_banana_com_whey'],
+  almoco:['arroz_feijao_file_de_frango_brocolis_e_folhas','batata_doce_feijao_frango_desfiado_couve_flor_e_alface','arroz_lentilha_peixe_grelhado_abobrinha_e_agriao','mandioca_feijao_peixe_repolho_e_cenoura','arroz_feijao_tilapia_abobora_e_repolho','batata_inglesa_feijao_carne_moida_chuchu_e_alface','arroz_grao_de_bico_peixe_berinjela_e_alface'],
+  jantar:['bowl_de_salada_com_frango_e_batata_doce','sopa_de_abobora_com_frango_desfiado','bowl_de_salada_com_peixe_e_mandioca','bowl_de_salada_com_tilapia_e_cuscuz','bowl_de_salada_com_peru_e_batata_baroa','bowl_de_salada_com_ovo_e_batata_doce','caldo_verde_proteico_com_frango'],
+  ceia:['iogurte_com_maca','banana']},
+ manter:{
+  cafe:['pao_integral_com_ovo_e_mamao','pao_frances_com_queijo_branco_e_melao','tapioca_com_ovo_e_uvas','aveia_com_iogurte_banana_e_castanhas','cuscuz_com_ovo_e_mamao','pao_integral_com_ricota_e_uvas'],
+  lanche:['crepioca_com_queijo_branco_e_mexerica','sanduiche_natural_de_frango_desfiado_ricota_e_cenoura','iogurte_com_granola_e_morango','castanhas_e_laranja','ovo_cozido_com_uvas_e_castanhas','tapioca_com_ricota_e_morango'],
+  almoco:['arroz_feijao_file_de_frango_brocolis_e_folhas','arroz_feijao_carne_moida_couve_e_tomate','escondidinho_de_frango_com_mandioca_e_salada','macarrao_com_frango_desfiado_brocolis_e_milho','quinoa_grao_de_bico_frango_grelhado_espinafre_e_tomate','mandioca_feijao_peixe_repolho_e_cenoura'],
+  jantar:['bowl_de_salada_com_atum_e_quinoa','bowl_de_salada_com_ovo_e_arroz','bowl_de_salada_com_frango_desfiado_e_grao_de_bico','canja_de_frango_com_legumes','bowl_de_salada_com_carne_moida_e_macarrao','bowl_de_salada_com_frango_e_batata_doce'],
+  ceia:['iogurte_com_maca','banana']},
+ ganhar:{
+  cafe:['pao_de_forma_com_pasta_de_amendoim_e_banana','tapioca_com_mussarela_e_morango','pao_frances_com_ovo_e_manga','aveia_com_iogurte_banana_e_castanhas','tapioca_com_frango_desfiado_e_manga','pao_integral_com_frango_desfiado_e_kiwi'],
+  lanche:['pao_com_pasta_de_amendoim_e_banana','sanduiche_natural_de_frango_desfiado_ricota_e_cenoura','torrada_de_abacate_com_ovo','panqueca_de_banana_e_aveia','tapioca_com_frango_desfiado_e_tomate','banana_com_pasta_de_amendoim_e_chia'],
+  almoco:['escondidinho_de_carne_moida_com_batata_doce_e_salada','macarrao_com_carne_moida_tomate_e_cenoura','quinoa_grao_de_bico_frango_grelhado_espinafre_e_tomate','arroz_feijao_carne_moida_couve_e_tomate','macarrao_com_frango_desfiado_brocolis_e_milho','quinoa_lentilha_salmao_brocolis_e_pepino'],
+  jantar:['bowl_de_salada_com_carne_moida_e_macarrao','bowl_de_salada_com_salmao_e_batata_inglesa','bowl_de_salada_com_frango_desfiado_e_grao_de_bico','bowl_de_salada_com_ovo_e_arroz','bowl_de_salada_com_atum_e_quinoa','sopa_de_lentilha_com_frango_desfiado'],
+  ceia:['banana','iogurte_com_maca']}
+};
+function escolherPadrao(lista,obj,tipo){
+  const ord=(PADRAO[obj]||PADRAO.manter)[tipo]||[];
+  const pos=e=>{const i=ord.indexOf(e.d.id.replace(tipo+'_',''));return i<0?1000:i;};
+  const dn=e=>densPrato(e.it);
+  return lista.slice().sort((a,b)=>{
+    const d=pos(a)-pos(b);if(d)return d;
+    if(obj==='ganhar')return dn(b)-dn(a)||a.d.id.localeCompare(b.d.id);
+    if(obj==='emagrecer')return dn(a)-dn(b)||a.d.id.localeCompare(b.d.id);
+    return a.d.id.localeCompare(b.d.id);
+  })[0];
+}
 function pickPrato(lista,obj){
   if(obj!=='emagrecer'&&obj!=='ganhar')return pickOf(lista);
   const ds=lista.map(e=>densPrato(e.it)),med=ds.reduce((a,b)=>a+b,0)/ds.length||1;
@@ -1138,14 +1198,14 @@ function gerarRefeicao(chave,tipo,pct,p,meta,usados){
   const m=MTAG[tipo];
   const lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
   let esc_,titulo,pratoId=null;
-  if(lista.length){const e=pickPrato(lista,p.obj);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
+  if(lista.length){const e=escolherPadrao(lista,p.obj,tipo);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
   else{ /* restrições fortes: monta pelos grupos de alimentos */
     esc_=[];const u=new Set();
     (({cafe:[['carbo',50,1],['prot',100,1],['fruta',100,1]],lanche:[['fruta',100,1],['gord',25,1]],
        almoco:[['carbo',135,1],['leg',90,0],['prot',120,1],['veg',80,0],['oleo',8,0]],
        jantar:[['carbo',100,1],['prot',120,1],['veg',80,0],['oleo',8,0]],ceia:[['fruta',150,1]]})[tipo]).forEach(([gr,g,v])=>{
       const l=elegiveis(gr,m,p).filter(f=>!u.has(f.id));if(!l.length)return;
-      const f=pickOf(l);u.add(f.id);esc_.push({f:f.id,g,v:!!v});});
+      const f=l[0];u.add(f.id);esc_.push({f:f.id,g,v:!!v});});
     titulo=tituloItens(esc_);
   }
   const alvo=meta.kcal*pct;
@@ -1197,7 +1257,7 @@ function reforcar(d,p){
   d.meals.forEach(me=>{
     const lista=(REFORCO[me.tipo]||[]).filter(id=>F[id]&&allowed(F[id],p)&&!me.itens.some(i=>i.f===id));
     if(!lista.length)return;
-    const id=pickOf(lista);me.itens.push({f:id,g:REFQ[id]});me.reforco=true;
+    const id=lista[0];me.itens.push({f:id,g:REFQ[id]});me.reforco=true;
   });
 }
 function gerarDieta(p){
@@ -1298,12 +1358,13 @@ function renderDieta(){
   const foto=meal.prato&&!meal.editado&&!meal.reforco&&!trocada;
   h+=`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
   h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="imagens/refeicoes/${meal.prato}.jpg" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
-      <div class="mv-txt"><div class="lbl2">${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
+      <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
     <div class="mv-sheet">
       <div class="mv-cal"><b>${Math.round(tt.k)}</b><span>kcal</span></div>
       <div class="mv-mac"><div class="mp"><span>Proteínas</span><b>${Math.round(tt.p)} g</b></div><div class="mc2"><span>Carboidratos</span><b>${Math.round(tt.c)} g</b></div><div class="mg"><span>Gorduras</span><b>${Math.round(tt.g)} g</b></div></div>
       <h3>Composição</h3>
       ${its.map(it=>{const f=F[it.f];return `<div class="cr">${thumb(f)}<div class="cr-t"><b>${esc(f.n)}</b>${it.troca?'<em class="altb">alternativa escolhida</em>':''}<span>${it.g} g | ${curta(f,it.g)}</span></div></div>`;}).join('')}
+      ${meal.obs?`<div class="obs"><b>Observação</b><p>${esc(meal.obs)}</p></div>`:''}
       <h3>Alternativas</h3>
       <p class="sub" style="margin:-4px 0 10px">Opcionais. Escolha só se quiser trocar. Não é para comer junto com o alimento original.</p>
       ${meal.itens.map((it,i)=>{const subs=substituicoes(it,meal.tipo,dados);if(!subs.length)return '';const f=F[it.f],cur=trocas[mi+':'+i];
@@ -1595,7 +1656,7 @@ async function abrirClienteNuvem(id){
     if(p.data&&!velho){dieta=p.data.dieta;dieta.status=p.data.status;}
     else{dieta=gerarDieta(dados);dieta.status='pendente';planoPushAgora();
       const e={cliente_id:id,quem:'nutri',tipo:'dieta',txt:velho?'Dados novos da cliente: nova sugestão de dieta gerada.':'Sugestão de dieta gerada para revisão.',t:iso()};EV_ATUAL.unshift(e);sbA.from('eventos').insert(e);}
-    admView='dieta';renderAdmin();window.scrollTo(0,0);
+    admAb=new Set([0]);admView='dieta';renderAdmin();window.scrollTo(0,0);
   }catch(e){aviso('Não consegui abrir esta cliente. Tente de novo.');renderAdmClientes();}
 }
 function removerClienteNuvem(id){
@@ -1667,7 +1728,7 @@ const fmtData=t=>{const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'
 function abrirCliente_local(id){
   sync();
   const r=CL().find(x=>x.id===id);if(!r)return;
-  dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;
+  dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;admAb=new Set([0]);
   try{localStorage.setItem('nutri3_dados',JSON.stringify(dados));localStorage.setItem('nutri3_dieta',JSON.stringify(dieta));localStorage.setItem('nutri3_pesos',JSON.stringify(pesos));localStorage.setItem('nutri3_checks',JSON.stringify(checks));localStorage.setItem('nutri3_trocas',JSON.stringify(trocas));}catch(e){}
   admView='dieta';renderAdmin();window.scrollTo(0,0);
 }
@@ -1728,7 +1789,7 @@ function renderAdmin(){
   if(!dados||!dieta){o.innerHTML=admNav()+`<div class="card"><h2>Área da nutricionista</h2><p>Nenhuma cliente selecionada. Escolha uma na lista de clientes.</p><button onclick="admView='clientes';renderAdmin()">Ver clientes</button></div>`;return;}
   const t=totaisDia(dieta),m=dieta.meta;
   const pc=(a,b)=>Math.round(a/b*100);
-  let h=admNav()+`<div class="admsum"><div><b>${Math.round(t.k)}</b> / ${m.kcal} kcal</div><div>P <b>${Math.round(t.p)}</b>/${m.prot}</div><div>C <b>${Math.round(t.c)}</b>/${m.carb}</div><div>G <b>${Math.round(t.g)}</b>/${m.gord}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
+  let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
    <div class="sub">${dados.sexo==='f'?'F':'M'}, ${dados.idade} anos, ${dados.peso} kg, ${dados.altura} cm · IMC ${br(m.imc)} · ${dados.refs} refeições · restrições: ${dados.restr.join(', ')||'nenhuma'}${dados.dislikes.length?' · não gosta: '+esc(dados.dislikes.join(', ')):''}</div>
    <div class="sub" style="margin-top:6px">Meta da cliente: ${dados.metaKg?`perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'sem meta em quilos'}</div>
    <div class="sub" style="margin-top:6px">Equação: <select onchange="setFormula(this.value)" style="width:auto;display:inline-block;padding:6px 10px"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática (Mifflin se emagrecer ou IMC 25+, senão OMS)</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS (FAO/WHO/UNU)</option></select></div>
@@ -1740,14 +1801,20 @@ function renderAdmin(){
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
   dieta.meals.forEach((meal,mi)=>{
-    h+=`<div class="card"><div class="mealhead"><div><div class="lbl">${meal.nome}</div></div><span class="kc">${Math.round(totais(meal).k)} kcal · P ${Math.round(totais(meal).p)} · C ${Math.round(totais(meal).c)} · G ${Math.round(totais(meal).g)}</span></div><input value="${esc(meal.titulo)}" onchange="dieta.meals[${mi}].titulo=this.value;save('dieta',dieta)" style="margin-bottom:6px;font-weight:600"><input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="dieta.meals[${mi}].desc=this.value;save('dieta',dieta)" style="margin-bottom:6px"><div class="sub" style="margin-bottom:6px">${meal.editado?'Refeição editada: a foto do prato não é exibida, porque deixou de corresponder à composição original.':''}</div>`;
+    const tm=totais(meal);
+    h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>P ${Math.round(tm.p)} · C ${Math.round(tm.c)} · G ${Math.round(tm.g)}</small></div></summary>
+      <div class="mcard-b"><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
+      <input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="setMealCampo(${mi},'desc',this.value)" style="margin-top:8px">
+      ${meal.editado?'<div class="sub" style="margin:6px 0">Refeição editada: a foto do prato não aparece, porque deixou de corresponder à composição original.</div>':''}`;
     meal.itens.forEach((it,ii)=>{
-      const f=F[it.f];
-      h+=`<div class="il"><div class="il-n"><b>${f.n}</b><span>${linha(f,it.g)} · ${Math.round(it.g)} g · ${Math.round(f.k*it.g/100)} kcal</span></div>
-        <div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><b>${fmtQ(qDe(f,it.g))}</b><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div>
+      const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
+      h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><span>${Math.round(k)} kcal · P ${r1(pp)} · C ${r1(cc)} · G ${r1(gg)}</span></div>
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${fmtQ(qDe(f,it.g))}" onchange="editQ(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">${qDe(f,it.g)>1?f.u.p:f.u.s}</span>
+          <label class="gi"><input type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"> g</label></div>
         <button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div>`;
     });
-    h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento (TACO completa, TBCA, meus alimentos)" oninput="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div></div>`;
+    h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
+      <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(meal.obs||'')}</textarea></div></details>`;
   });
   h+=`<div class="card"><label style="margin-top:0">Recado para a cliente (opcional)</label><textarea id="nota" onchange="dieta.nota=this.value;save('dieta',dieta)">${esc(dieta.nota||'')}</textarea>
    <button class="full" onclick="aprovar()">${dieta.status==='aprovada'?'Atualizar dieta aprovada':'Aprovar e liberar'}</button>
@@ -1759,7 +1826,21 @@ function renderAdmin(){
    <div class="card"><button class="full light" style="color:#8a2a30" onclick="removerCliente('${dados.id}')">Excluir esta cliente</button></div>`;
   o.innerHTML=h;
 }
-function editQ(mi,ii,v){dieta.meals[mi].editado=true;const it=dieta.meals[mi].itens[ii],f=F[it.f];it.g=Math.round(Math.max(f.st,num(v)||f.st)*f.u.g);save('dieta',dieta);renderAdmin();}
+function editQ(mi,ii,v){const me=dieta.meals[mi];me.editado=true;const it=me.itens[ii],f=F[it.f],antes=Math.round(it.g);it.g=Math.round(Math.max(f.st,num(v)||f.st)*f.u.g);save('dieta',dieta);logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();}
+let admAb=new Set([0]);
+function admToggle(mi,ab){if(ab)admAb.add(mi);else admAb.delete(mi);}
+function setMealCampo(mi,k,v){
+  const me=dieta.meals[mi];me[k]=v;save('dieta',dieta);
+  if(k==='obs')logH('edicao',me.nome+': observação '+(v?'atualizada':'removida'));
+  if(k==='hora')logH('edicao',me.nome+': horário '+(v||'removido'));
+  if(k==='titulo'||k==='desc')logH('edicao',me.nome+': '+(k==='titulo'?'título':'descrição')+' alterado');
+  if(k==='hora'||k==='titulo')renderAdmin();
+}
+function editG(mi,ii,v){
+  const me=dieta.meals[mi],it=me.itens[ii],f=F[it.f],antes=Math.round(it.g);
+  it.g=Math.max(5,Math.round(num(v))||antes);me.editado=true;save('dieta',dieta);
+  logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();
+}
 function stepQ(mi,ii,dir){
   const me=dieta.meals[mi],it=me.itens[ii],f=F[it.f],stp=f.st*f.u.g;
   const antes=fmtQ(qDe(f,it.g));
@@ -1773,14 +1854,20 @@ function remItem(mi,ii){const me=dieta.meals[mi],f=F[me.itens[ii].f];me.editado=
 
 /* ----- busca e cadastro de alimentos (área da nutricionista) ----- */
 const semAc=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const rotulo=f=>`${Math.round(f.k*f.u.g/100)} kcal · 1 ${f.u.s} (${f.u.g} g)`;
 function buscaAlim(mi){
   const q=semAc($('q'+mi).value.trim()),o=$('res'+mi),ws=q.split(/[\s,]+/).filter(w=>w.length>1&&w!=='de'&&w!=='com'),ok=nm=>{const t=semAc(nm);return ws.every(w=>t.includes(w));};
-  if(q.length<2||!ws.length){o.innerHTML='';return;}
+  const btn=(r,sub)=>`<button class="resb" onclick="addAlim(${mi},'${r.k}',${JSON.stringify(r.id).replace(/"/g,'&quot;')})"><span><b>${esc(r.n)}</b><small>${sub}</small></span><em>${r.fonte}</em></button>`;
+  if(q.length<2||!ws.length){
+    const rec=load('recentes',[]).filter(id=>F[id]).slice(0,10);
+    o.innerHTML=rec.length?`<div class="sub" style="padding:2px 2px 4px">Usados recentemente</div>`+rec.map(id=>btn({k:'f',id,n:F[id].n,fonte:F[id].t?'TACO '+F[id].t:(F[id].fonte||'cadastrado')},rotulo(F[id]))).join(''):'';
+    return;
+  }
   const ja=new Set(FOODS.map(f=>f.t).filter(Boolean));
-  const base=FOODS.filter(f=>f.grp!=='rec'&&ok(f.n)).map(f=>({k:'f',id:f.id,n:f.n,fonte:f.t?'TACO '+f.t:(f.fonte||'cadastrado')}));
-  const taco=ALIM.filter(a=>!ja.has(a.id)&&ok(a.n)).map(a=>({k:'t',id:a.id,n:a.n,fonte:'TACO '+a.id}));
+  const base=FOODS.filter(f=>f.grp!=='rec'&&ok(f.n)).map(f=>({k:'f',id:f.id,n:f.n,fonte:f.t?'TACO '+f.t:(f.fonte||'cadastrado'),sub:rotulo(f)}));
+  const taco=ALIM.filter(a=>!ja.has(a.id)&&a.k!=null&&ok(a.n)).map(a=>({k:'t',id:a.id,n:a.n,fonte:'TACO '+a.id,sub:Math.round(a.k)+' kcal por 100 g'}));
   const lista=[...base,...taco].slice(0,12);
-  o.innerHTML=lista.length?lista.map(r=>`<button class="resb" onclick="addAlim(${mi},'${r.k}',${JSON.stringify(r.id).replace(/"/g,'&quot;')})"><span>${esc(r.n)}</span><em>${r.fonte}</em></button>`).join(''):`<div class="sub" style="padding:6px 2px">Nada encontrado. Use "Cadastrar da TBCA" para incluir o alimento com os seus valores.</div>`;
+  o.innerHTML=lista.length?lista.map(r=>btn(r,r.sub)).join(''):`<div class="sub" style="padding:6px 2px">Nada encontrado. Use "Cadastrar da TBCA" para incluir o alimento com os seus valores.</div>`;
 }
 function addAlim(mi,k,id){
   if(k==='t'){
@@ -1790,7 +1877,9 @@ function addAlim(mi,k,id){
     if(!F[f.id]){FOODS.push(f);F[f.id]=f;EXTRAS.push(f);save('extras',EXTRAS);}
     id=f.id;
   }
-  dieta.meals[mi].editado=true;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);logH('edicao',dieta.meals[mi].nome+': acrescentou '+F[id].n);renderAdmin();
+  dieta.meals[mi].editado=true;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);
+  try{localStorage.setItem('nutri3_recentes',JSON.stringify([id,...load('recentes',[]).filter(x=>x!==id)].slice(0,12)))}catch(e){}
+  admAb.add(mi);logH('edicao',dieta.meals[mi].nome+': acrescentou '+F[id].n);renderAdmin();
 }
 function formAlim(mi){
   const o=$('nf'+mi);if(o.innerHTML){o.innerHTML='';return;}
