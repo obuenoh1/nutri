@@ -643,7 +643,7 @@
   .row2{display:flex;gap:10px}.row2>div{flex:1;min-width:0}.row2 input{width:100%;box-sizing:border-box}
   .il{grid-template-columns:1fr;gap:8px}
   .il-q{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .stp .qi{width:54px;border:0;background:transparent;text-align:center;font-weight:700;font-size:15px;padding:0;margin:0;color:#3f2227}
+  .stp .qi{width:60px;border:0;background:transparent;text-align:center;font-weight:700;font-size:15px;padding:0;margin:0;color:#3f2227}
   .il-q .un{font-size:12.5px;color:#756052}
   .gi{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:13px;color:#756052}.gi input{width:62px;text-align:right;padding:8px 8px}
   .il>.mini{grid-column:auto}
@@ -1809,8 +1809,7 @@ function renderAdmin(){
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
       h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><span>${Math.round(k)} kcal · P ${r1(pp)} · C ${r1(cc)} · G ${r1(gg)}</span></div>
-        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${fmtQ(qDe(f,it.g))}" onchange="editQ(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">${qDe(f,it.g)>1?f.u.p:f.u.s}</span>
-          <label class="gi"><input type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"> g</label></div>
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span></div>
         <button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div>`;
     });
     h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
@@ -1842,10 +1841,10 @@ function editG(mi,ii,v){
   logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();
 }
 function stepQ(mi,ii,dir){
-  const me=dieta.meals[mi],it=me.itens[ii],f=F[it.f],stp=f.st*f.u.g;
-  const antes=fmtQ(qDe(f,it.g));
-  it.g=Math.max(stp,Math.round(it.g+dir*stp));me.editado=true;save('dieta',dieta);
-  logH('edicao',me.nome+': '+f.n+' '+antes+' → '+fmtQ(qDe(f,it.g))+' ('+Math.round(it.g)+' g)');renderAdmin();
+  const me=dieta.meals[mi],it=me.itens[ii],f=F[it.f],antes=Math.round(it.g);
+  const stp=antes<=40?5:10;
+  it.g=Math.max(5,antes+dir*stp);me.editado=true;save('dieta',dieta);
+  logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();
 }
 function recalcDia(){
   ask('Ajustar as quantidades de todas as refeições para chegar o mais perto possível das metas? Isso muda as quantidades que você editou.',()=>{balancear(dieta,dados);save('dieta',dieta);logH('edicao','Quantidades ajustadas automaticamente às metas.');renderAdmin();});
