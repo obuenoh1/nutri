@@ -648,6 +648,10 @@
   .gi{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:13px;color:#756052}.gi input{width:62px;text-align:right;padding:8px 8px}
   .il>.mini{grid-column:auto}
   .resb small{display:block;font-weight:400;color:#756052;font-size:11.5px;margin-top:1px}.resb b{font-weight:600}
+  .ptn{margin:10px 0 4px;padding:10px 12px;border-radius:12px;background:#efe7d8;font-size:13.5px;color:#3f2227;text-align:center;letter-spacing:.02em}.ptn b{font-weight:700}
+  .fotobox{display:flex;gap:12px;align-items:center;margin:10px 0;padding:10px;border-radius:14px;background:#f7f1e4}
+  .fotobox img,.fb-v{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}.fb-v{display:flex;align-items:center;justify-content:center;background:#e5dcc9;color:#756052;font-size:12px}
+  .fb-a{display:flex;flex-direction:column;gap:6px;align-items:flex-start;font-size:13px}.fb-a span{color:#756052;font-size:12px}.fb-b{cursor:pointer;display:inline-block}
   .obs{background:#efe7d8;border-radius:14px;padding:12px 14px;margin:14px 0 4px}.obs b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#756052}.obs p{margin:4px 0 0;font-size:14px}
 
   details.mcard>summary{text-decoration:none;text-align:left;color:var(--ink);font-size:13px}
@@ -1355,15 +1359,16 @@ function renderDieta(){
   if(dieta.nota)h+=`<div class="card sand"><h3 style="margin-top:0;color:#6d6560">Um recado meu</h3><p>${esc(dieta.nota)}</p></div>`;
   const mi=Math.min(mealSel,dieta.meals.length-1),meal=dieta.meals[mi],its=itensEf(meal,mi),tt=totaisI(its);
   const trocada=its.some(i=>i.troca);
-  const foto=meal.prato&&!meal.editado&&!meal.reforco&&!trocada;
+  const fotoU=meal.foto||'';const foto=fotoU||(meal.prato&&!meal.editado&&!meal.reforco&&!trocada);
   h+=`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
-  h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="imagens/refeicoes/${meal.prato}.jpg" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
+  h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="${fotoU||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
       <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
     <div class="mv-sheet">
       <div class="mv-cal"><b>${Math.round(tt.k)}</b><span>kcal</span></div>
       <div class="mv-mac"><div class="mp"><span>Proteínas</span><b>${Math.round(tt.p)} g</b></div><div class="mc2"><span>Carboidratos</span><b>${Math.round(tt.c)} g</b></div><div class="mg"><span>Gorduras</span><b>${Math.round(tt.g)} g</b></div></div>
       <h3>Composição</h3>
       ${its.map(it=>{const f=F[it.f];return `<div class="cr">${thumb(f)}<div class="cr-t"><b>${esc(f.n)}</b>${it.troca?'<em class="altb">alternativa escolhida</em>':''}<span>${it.g} g | ${curta(f,it.g)}</span></div></div>`;}).join('')}
+      <div class="ptn">PTN = <b>${Math.round(tt.p)} g</b> &nbsp;·&nbsp; CHO = <b>${Math.round(tt.c)} g</b> &nbsp;·&nbsp; LIP = <b>${Math.round(tt.g)} g</b></div>
       ${meal.obs?`<div class="obs"><b>Observação</b><p>${esc(meal.obs)}</p></div>`:''}
       <h3>Alternativas</h3>
       <p class="sub" style="margin:-4px 0 10px">Opcionais. Escolha só se quiser trocar. Não é para comer junto com o alimento original.</p>
@@ -1805,13 +1810,16 @@ function renderAdmin(){
     h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>P ${Math.round(tm.p)} · C ${Math.round(tm.c)} · G ${Math.round(tm.g)}</small></div></summary>
       <div class="mcard-b"><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
       <input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="setMealCampo(${mi},'desc',this.value)" style="margin-top:8px">
-      ${meal.editado?'<div class="sub" style="margin:6px 0">Refeição editada: a foto do prato não aparece, porque deixou de corresponder à composição original.</div>':''}`;
+      <div class="fotobox">${(meal.foto||(meal.prato&&!meal.editado))?`<img src="${meal.foto||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="" onerror="this.remove()">`:'<div class="fb-v">Sem foto</div>'}
+        <div class="fb-a"><b>Foto do prato</b><span>${meal.foto?'Foto anexada por você.':(meal.editado?'Refeição editada: sem foto padrão.':'Foto padrão do prato.')}</span>
+        <label class="mini light fb-b">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div>`;
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
       h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><span>${Math.round(k)} kcal · P ${r1(pp)} · C ${r1(cc)} · G ${r1(gg)}</span></div>
         <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span></div>
         <button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div>`;
     });
+    h+=`<div class="ptn">PTN = <b>${Math.round(tm.p)} g</b> &nbsp;·&nbsp; CHO = <b>${Math.round(tm.c)} g</b> &nbsp;·&nbsp; LIP = <b>${Math.round(tm.g)} g</b></div>`;
     h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
       <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(meal.obs||'')}</textarea></div></details>`;
   });
@@ -1846,6 +1854,18 @@ function stepQ(mi,ii,dir){
   it.g=Math.max(5,antes+dir*stp);me.editado=true;save('dieta',dieta);
   logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();
 }
+function anexarFoto(mi,inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{const im=new Image();im.onload=()=>{
+    const W=Math.min(900,im.width),H=Math.round(im.height*W/im.width),c=document.createElement('canvas');c.width=W;c.height=H;
+    c.getContext('2d').drawImage(im,0,0,W,H);
+    const me=dieta.meals[mi];me.foto=c.toDataURL('image/jpeg',.78);save('dieta',dieta);
+    logH('edicao',me.nome+': foto do prato anexada');renderAdmin();};
+    im.onerror=()=>{};im.src=rd.result;};
+  rd.readAsDataURL(f);
+}
+function removerFoto(mi){const me=dieta.meals[mi];delete me.foto;save('dieta',dieta);logH('edicao',me.nome+': foto removida');renderAdmin();}
 function recalcDia(){
   ask('Ajustar as quantidades de todas as refeições para chegar o mais perto possível das metas? Isso muda as quantidades que você editou.',()=>{balancear(dieta,dados);save('dieta',dieta);logH('edicao','Quantidades ajustadas automaticamente às metas.');renderAdmin();});
 }
