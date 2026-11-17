@@ -622,6 +622,10 @@
   .cli-n{flex:1;min-width:0}.cli-n b{display:block;font-size:15px}.cli-n span{display:block;font-size:12.5px;color:#756052;margin-top:2px}
   .cli-n .cli-u{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8a7a70}
   .hl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:9px 0;border-top:1px solid #e6dccb}.hl span{font-size:12px;color:#8a7a70;white-space:nowrap}.hl p{margin:0;font-size:13.5px}
+
+  .aceite{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:13px;color:#756052;line-height:1.3}
+  .aceite input{width:20px;height:20px;margin-top:1px;flex:none}
+  #dem{width:100%;box-sizing:border-box;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -664,6 +668,7 @@
       </div>
       <label>Alimentos que eu não gosto ou não como</label>
       <input id="dislikes" placeholder="ex.: peixe, tofu, lentilha (separe por vírgula)">
+      <label class="aceite"><input type="checkbox" id="aceite"><span>Concordo que a nutricionista guarde e use os meus dados de saúde para montar o meu plano. Posso apagá-los quando quiser.</span></label>
       <button class="full" onclick="salvarDados()">Enviar meus dados</button>
       <button class="light full" style="margin-top:10px" onclick="apagarDados()">Apagar meus dados e voltar ao início</button>
     </div>
@@ -718,8 +723,9 @@
   <button data-t="compras" aria-label="Compras"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg><span>Compras</span></button>
   <button data-t="dados" aria-label="Eu"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>Eu</span></button>
 </nav>
-<div id="dlg" style="display:none"><div class="dbox"><p id="dtxt"></p><input id="dinp" type="password" inputmode="numeric" autocomplete="off" style="display:none"><div class="drow"><button class="light" id="dno">Cancelar</button><button id="dok">OK</button></div></div></div>
+<div id="dlg" style="display:none"><div class="dbox"><p id="dtxt"></p><input id="dem" type="email" placeholder="E-mail" autocomplete="username" style="display:none"><input id="dinp" type="password" inputmode="numeric" autocomplete="off" style="display:none"><div class="drow"><button class="light" id="dno">Cancelar</button><button id="dok">OK</button></div></div></div>
 
+<script src="vendor/supabase.js"></script>
 <script>
 /* ===== Base de alimentos =====
    k,p,c,g por 100 g: copiados da TACO (id em "t"). u = medida caseira (estimativa), st = passo,
@@ -908,14 +914,14 @@ const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem('nutri3_'+k))??d}catch(e){return d}};
 const SYNCK=['dados','dieta','pesos','checks','trocas'];
-const save=(k,v)=>{try{localStorage.setItem('nutri3_'+k,JSON.stringify(v))}catch(e){}if(SYNCK.indexOf(k)>=0)sync();};
+const save=(k,v)=>{if(NUVEM&&nutriMode&&SYNCK.indexOf(k)>=0){if(k==='dieta')planoPush();return;}try{localStorage.setItem('nutri3_'+k,JSON.stringify(v))}catch(e){}if(SYNCK.indexOf(k)>=0){sync();nuvemPush();}};
 /* alimentos extras (TACO completa, TBCA ou rótulo) cadastrados na área da nutricionista */
 /* ----- clientes e histórico (guardados neste aparelho) ----- */
 function CL(){return load('clientes',[]);}
 function saveCL(l){try{localStorage.setItem('nutri3_clientes',JSON.stringify(l))}catch(e){}}
 let _sync=false;
 function sync(){
-  if(_sync)return;
+  if(_sync||(NUVEM&&nutriMode))return;
   try{
     if(!dados)return;
     _sync=true;
@@ -927,7 +933,98 @@ function sync(){
     if(!nutriMode)try{localStorage.setItem('nutri3_meuId',JSON.stringify(dados.id))}catch(e){}
   }catch(e){}finally{_sync=false;}
 }
+/* ===== Nuvem (Supabase): clientes, planos e histórico acessíveis de qualquer aparelho ===== */
+const SB_URL='https://ccjsrxurprjiiyydgeke.supabase.co',SB_KEY='sb_publishable_GvKxQCHTcYmFknGg81tRZA_z-pKZpBe';
+let sbC=null,sbA=null;
+try{
+  if(window.supabase&&window.supabase.createClient){
+    sbC=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'nutri-cli',persistSession:true,autoRefreshToken:true}});
+    sbA=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'nutri-adm',persistSession:true,autoRefreshToken:true}});
+  }
+}catch(e){sbC=null;sbA=null;}
+const NUVEM=!!(sbC&&sbA);
+const iso=()=>new Date().toISOString();
+async function sessaoCli(){
+  if(!NUVEM)return null;
+  const g=await sbC.auth.getSession();if(g.data&&g.data.session)return g.data.session;
+  const r=await sbC.auth.signInAnonymously();return r.data&&r.data.session;
+}
+let _tpush=null,_tplano=null;
+function nuvemPush(){if(!NUVEM||nutriMode||!dados||!dados.id)return;clearTimeout(_tpush);_tpush=setTimeout(nuvemPushAgora,700);}
+async function nuvemPushAgora(){
+  try{
+    if(!dados||!dados.id)return;
+    const ses=await sessaoCli();if(!ses)return;
+    if(!dados.dadosEm){dados.dadosEm=iso();try{localStorage.setItem('nutri3_dados',JSON.stringify(dados))}catch(e){}}
+    const row={id:dados.id,nome:dados.nome,dados,pesos,checks,trocas,atualizado:iso(),dados_em:dados.dadosEm};
+    const r=await sbC.from('clientes').upsert(row,{onConflict:'id'});
+    if(r.error){console.warn('push',r.error.message);return;}
+    await flushEventos();
+  }catch(e){console.warn(e);}
+}
+async function flushEventos(){
+  const fila=load('fila',[]).filter(x=>x.quem==='cliente');if(!fila.length)return;
+  const r=await sbC.from('eventos').insert(fila);
+  if(!r.error){try{localStorage.setItem('nutri3_fila',JSON.stringify(load('fila',[]).filter(x=>x.quem!=='cliente')))}catch(e){}}
+}
+async function nuvemApagar(id){
+  if(!NUVEM||!id)return;
+  try{const g=await sbC.auth.getSession();if(g.data&&g.data.session)await sbC.from('clientes').delete().eq('id',id);}catch(e){}
+  try{localStorage.removeItem('nutri3_fila')}catch(e){}
+}
+async function nuvemPull(){
+  if(!NUVEM||nutriMode||!dados||!dados.id)return false;
+  try{
+    const g=await sbC.auth.getSession();if(!g.data||!g.data.session)return false;
+    const c=await sbC.from('clientes').select('dados_em').eq('id',dados.id).maybeSingle();if(!c.data)return false;
+    const p=await sbC.from('planos').select('dieta,status,base').eq('cliente_id',dados.id).maybeSingle();
+    let mudou=false;
+    if(p.data&&p.data.base&&new Date(p.data.base)>=new Date(c.data.dados_em)){
+      const nd=p.data.dieta;nd.status='aprovada';
+      if(JSON.stringify(nd)!==JSON.stringify(dieta)){dieta=nd;trocas=trocasValidas(trocas);mudou=true;}
+    }else if(dieta&&dieta.status==='aprovada'){dieta.status='pendente';mudou=true;}
+    if(mudou){try{localStorage.setItem('nutri3_dieta',JSON.stringify(dieta))}catch(e){}sync();}
+    return mudou;
+  }catch(e){return false;}
+}
+function trocasValidas(t){return t;}
+async function nuvemAtualizar(){
+  if(!NUVEM||nutriMode)return;
+  const m=await nuvemPull();
+  if(m&&(tabAtual==='dieta'||tabAtual==='inicio'||tabAtual==='compras')){const t=tabAtual,y=window.scrollY;tab(t,true);window.scrollTo(0,y);}
+}
+function planoPush(){if(!NUVEM||!nutriMode||!dados||!dados.id)return;clearTimeout(_tplano);_tplano=setTimeout(planoPushAgora,600);}
+async function planoPushAgora(){
+  try{
+    if(!dados||!dados.id||!dieta)return;
+    const r=await sbA.from('planos').upsert({cliente_id:dados.id,dieta,status:dieta.status||'pendente',base:dados.dadosEm||iso(),atualizado:iso()},{onConflict:'cliente_id'});
+    if(r.error)console.warn('plano',r.error.message);
+  }catch(e){console.warn(e);}
+}
+let EV_ATUAL=[],SNAP=null,ADM=[];
+function histAtual(){
+  if(NUVEM)return EV_ATUAL.map(e=>({t:new Date(e.t).getTime(),txt:(e.quem==='nutri'?'Nutri: ':'Cliente: ')+e.txt}));
+  return ((CL().find(x=>x.id===dados.id)||{}).hist||[]);
+}
 function logH(tipo,txt){
+  if(NUVEM){
+    try{
+      if(!dados||!dados.id){if(!nutriMode)sync();if(!dados||!dados.id)return;}
+      if(nutriMode){
+        const e={cliente_id:dados.id,quem:'nutri',tipo,txt,t:iso()};EV_ATUAL.unshift(e);
+        sbA.from('eventos').insert(e).then(r=>{if(r.error)console.warn(r.error.message)});
+      }else{
+        sync();const f=load('fila',[]);f.push({cliente_id:dados.id,quem:'cliente',tipo,txt,t:iso()});
+        try{localStorage.setItem('nutri3_fila',JSON.stringify(f))}catch(e){}
+        const l=CL(),r=l.find(x=>x.id===dados.id);if(r){(r.hist=r.hist||[]).push({t:Date.now(),tipo,txt});saveCL(l);}
+        nuvemPush();
+      }
+    }catch(e){}
+    return;
+  }
+  logHLocal(tipo,txt);
+}
+function logHLocal(tipo,txt){
   try{
     if(!dados)return;sync();
     const l=CL(),r=l.find(x=>x.id===dados.id);if(!r)return;
@@ -1146,6 +1243,7 @@ function salvarDados(){
     restr:[...document.querySelectorAll('#restr input:checked')].map(i=>i.value),
     dislikes:$('dislikes').value.toLowerCase().split(',').map(s=>s.trim()).filter(Boolean)};
   if(!novo.nome){alert('Me diga como posso te chamar.');$('nome').focus();return;}
+  if(NUVEM&&!$('aceite').checked){alert('Para enviar, marque o aceite sobre o uso dos seus dados.');return;}
   if(!(novo.idade>=18)){alert('Por enquanto eu atendo apenas pessoas com 18 anos ou mais.');return;}
   if(!(novo.peso>0&&novo.altura>0)){alert('Confira seu peso e sua altura.');return;}
   if(dieta&&dieta.status==='aprovada'&&!window._ok1){ask('Sua dieta atual já foi aprovada. Enviar novos dados gera uma nova dieta para eu revisar. Continuar?',()=>{window._ok1=1;salvarDados();window._ok1=0});return;}
@@ -1156,6 +1254,7 @@ function salvarDados(){
     if(metas(novo).bloq){const b=baseEnergia(novo);novo.ajuste=Math.max(0,Math.floor((b.get-PISO(novo))/50)*50);alert('Pelo seu perfil, o prazo escolhido levaria a uma dieta abaixo do mínimo seguro. Eu ajustei o déficit para o limite seguro, então o prazo será maior.');}
   }
   else if(novo.obj==='ganhar')novo.ajuste=300;
+  novo.dadosEm=new Date().toISOString();
   dados=novo;objD=null;save('dados',dados);nomeRascunho=novo.nome;save('nome',nomeRascunho);
   dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;
   if(!pesos.some(x=>x.d===hoje())){pesos.push({d:hoje(),kg:dados.peso});save('pesos',pesos);}
@@ -1332,6 +1431,7 @@ function aplicarObjetivo(){
   if(objD.obj==='emagrecer'){const mp=metaPerda();if(mp.erro)return;novo.metaKg=mp.kg;novo.metaDias=mp.dias;}else{delete novo.metaKg;delete novo.metaDias;}
   if(metas(novo).bloq)return;
   if(dieta&&dieta.status==='aprovada'&&!window._ok2){ask('Sua dieta atual já foi aprovada. Mudar o objetivo gera uma nova dieta para eu revisar. Continuar?',()=>{window._ok2=1;aplicarObjetivo();window._ok2=0});return;}
+  novo.dadosEm=new Date().toISOString();
   dados=novo;save('dados',dados);dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;checks={};save('checks',checks);
   logH('dados','Cliente mudou o objetivo para '+({emagrecer:'emagrecer',ganhar:'ganhar massa',manter:'manter o peso'})[dados.obj]+'. Nova dieta gerada.');
   tab('dieta');
@@ -1380,6 +1480,7 @@ function renderObjetivo(){
 function dialogo(txt,o){
   const d=$('dlg'),i=$('dinp'),ok=$('dok'),no=$('dno');
   $('dtxt').textContent=txt;i.style.display=o.input?'block':'none';i.value='';no.style.display=o.cancel?'inline-block':'none';
+  $('dem').style.display='none';
   const fecha=()=>{d.style.display='none';};
   ok.onclick=()=>{const v=i.value;fecha();if(o.ok)o.ok(v);};
   no.onclick=()=>{fecha();if(o.no)o.no();};
@@ -1391,7 +1492,7 @@ const ask=(m,sim,nao)=>dialogo(m,{cancel:1,ok:sim,no:nao});
 const pedir=(m,fn)=>dialogo(m,{input:1,cancel:1,ok:fn});
 window.alert=aviso;
 /* ===== Área da nutricionista ===== */
-function entrarNutri(){
+function entrarNutri_local(){
   let pin=load('pin',null);
   pedir(pin?'PIN da nutricionista':'Primeiro acesso: crie um PIN para a área da nutricionista',v=>{
     if(!v)return;
@@ -1400,7 +1501,113 @@ function entrarNutri(){
     nutriMode=true;admView='clientes';tab('admin');
   });
 }
-function sairNutri(){nutriMode=false;restaurarDono2();navStack=[];tab('inicio',true);}
+function sairNutri(){
+  if(NUVEM){
+    nutriMode=false;
+    if(SNAP){dados=SNAP.dados;dieta=SNAP.dieta;pesos=SNAP.pesos;checks=SNAP.checks;trocas=SNAP.trocas;SNAP=null;}
+    mealSel=0;objD=null;try{sbA.auth.signOut();}catch(e){}
+  }else{nutriMode=false;restaurarDono2();}
+  navStack=[];tab('inicio',true);
+}
+function entrarNutri(){if(NUVEM)entrarNutriNuvem();else entrarNutri_local();}
+function abrirCliente(id){if(NUVEM)abrirClienteNuvem(id);else abrirCliente_local(id);}
+function removerCliente(id,sd){if(NUVEM&&!sd)removerClienteNuvem(id);else removerCliente_local(id,sd);}
+function renderAdmClientes(){if(NUVEM)renderAdmClientesNuvem();else renderAdmClientes_local();}
+async function entrarNutriNuvem(){
+  try{
+    const g=await sbA.auth.getSession();
+    if(g.data&&g.data.session){
+      const ad=await sbA.from('admins').select('uid').maybeSingle();
+      if(ad.data){entrouAdmin();return;}
+      await sbA.auth.signOut();
+    }
+  }catch(e){}
+  dialogoLogin(async(email,senha)=>{
+    if(!email||!senha)return;
+    const r=await sbA.auth.signInWithPassword({email:email.trim(),password:senha});
+    if(r.error){aviso('E-mail ou senha incorretos.');return;}
+    const ad=await sbA.from('admins').select('uid').maybeSingle();
+    if(!ad.data){await sbA.auth.signOut();aviso('Este acesso não é de administradora.');return;}
+    try{localStorage.setItem('nutri3_admEmail',email.trim())}catch(e){}
+    entrouAdmin();
+  });
+}
+function entrouAdmin(){
+  SNAP={dados,dieta,pesos,checks,trocas};
+  nutriMode=true;admView='clientes';tab('admin');
+}
+function dialogoLogin(fn){
+  const d=$('dlg'),e=$('dem'),i=$('dinp'),ok=$('dok'),no=$('dno');
+  $('dtxt').textContent='Entrar na área da nutricionista';
+  e.style.display='block';e.value=load('admEmail','')||'';i.style.display='block';i.value='';i.placeholder='Senha';
+  no.style.display='inline-block';
+  const fecha=()=>{d.style.display='none';e.style.display='none';i.placeholder='';};
+  ok.onclick=()=>{const a=e.value,b=i.value;fecha();fn(a,b);};
+  no.onclick=fecha;i.onkeydown=ev=>{if(ev.key==='Enter')ok.onclick();};
+  d.style.display='flex';setTimeout(()=>(e.value?i:e).focus(),50);
+}
+async function carregarClientesNuvem(){
+  const [c,p,ev]=await Promise.all([
+    sbA.from('clientes').select('id,nome,dados,atualizado,dados_em').order('atualizado',{ascending:false}),
+    sbA.from('planos').select('cliente_id,status,base,meta:dieta->meta'),
+    sbA.from('eventos').select('cliente_id,quem,txt,t').order('t',{ascending:false}).limit(300)
+  ]);
+  if(c.error)throw c.error;
+  const pm={};(p.data||[]).forEach(x=>pm[x.cliente_id]=x);
+  const um={};(ev.data||[]).forEach(x=>{if(!um[x.cliente_id])um[x.cliente_id]=x;});
+  ADM=(c.data||[]).map(r=>{
+    const pl=pm[r.id],velho=pl&&pl.base&&new Date(pl.base)<new Date(r.dados_em);
+    const ok=!!(pl&&pl.status==='aprovada'&&!velho);
+    let kcal=null;try{kcal=(pl&&pl.meta&&pl.meta.kcal)||metas(r.dados).kcal;}catch(e){}
+    return {id:r.id,nome:r.nome,dados:r.dados,atualizado:new Date(r.atualizado).getTime(),ok,novo:!!velho,kcal,ult:um[r.id]};
+  });
+}
+async function renderAdmClientesNuvem(){
+  const o=$('adminOut');
+  o.innerHTML=admNav()+`<div class="card"><h2>Minhas <em>clientes</em></h2><div class="sub">Carregando…</div></div>`;
+  try{await carregarClientesNuvem();}catch(e){o.innerHTML=admNav()+`<div class="card"><h2>Minhas <em>clientes</em></h2><div class="alert">Não consegui carregar a lista. Confira a conexão e tente de novo.</div><button class="mini" onclick="renderAdmClientes()">Tentar de novo</button></div>`;return;}
+  if(admView!=='clientes')return;
+  const l=ADM.slice().sort((a,b)=>(a.ok-b.ok)||(b.atualizado-a.atualizado));
+  const pend=l.filter(r=>!r.ok).length;
+  const nomeObj={emagrecer:'Emagrecer',ganhar:'Ganhar massa',manter:'Manter o peso'};
+  let h=admNav()+`<div class="card"><h2>Minhas <em>clientes</em></h2><div class="sub">${l.length} cadastrada${l.length===1?'':'s'} · ${pend} aguardando revisão</div><button class="mini light" style="margin-top:10px" onclick="renderAdmClientes()">Atualizar lista</button></div>`;
+  if(!l.length)h+=`<div class="card sand"><p>Nenhuma cliente ainda. Quando uma cliente enviar os dados, ela aparece aqui, de qualquer aparelho.</p></div>`;
+  l.forEach(r=>{
+    const d=r.dados||{};
+    h+=`<div class="cli" onclick="abrirCliente('${r.id}')"><div class="cli-a">${esc((r.nome||'?').charAt(0).toUpperCase())}</div><div class="cli-n"><b>${esc(r.nome||'Sem nome')}</b><span>${nomeObj[d.obj]||''}${d.metaKg?' · '+br(d.metaKg)+' kg em '+d.metaDias+' dias':''}${r.kcal?' · '+r.kcal+' kcal':''}</span>${r.ult?`<span class="cli-u">${fmtData(new Date(r.ult.t).getTime())} · ${esc(r.ult.txt)}</span>`:''}</div><span class="tag ${r.ok?'l':''}">${r.ok?'aprovada':(r.novo?'dados novos':'em revisão')}</span></div>`;
+  });
+  h+=`<div class="card"><button class="full light" onclick="sairNutri()">Sair da área da nutricionista</button></div>`;
+  o.innerHTML=h;
+}
+async function abrirClienteNuvem(id){
+  const o=$('adminOut');o.innerHTML=admNav()+`<div class="card"><div class="sub">Abrindo…</div></div>`;
+  try{
+    const [c,p,ev]=await Promise.all([
+      sbA.from('clientes').select('*').eq('id',id).maybeSingle(),
+      sbA.from('planos').select('dieta,status,base').eq('cliente_id',id).maybeSingle(),
+      sbA.from('eventos').select('quem,tipo,txt,t').eq('cliente_id',id).order('t',{ascending:false}).limit(200)
+    ]);
+    if(!c.data)throw new Error('sem cliente');
+    const r=c.data;
+    dados=r.dados;dados.id=r.id;dados.dadosEm=r.dados_em;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;
+    EV_ATUAL=ev.data||[];
+    const velho=p.data&&p.data.base&&new Date(p.data.base)<new Date(r.dados_em);
+    if(p.data&&!velho){dieta=p.data.dieta;dieta.status=p.data.status;}
+    else{dieta=gerarDieta(dados);dieta.status='pendente';planoPushAgora();
+      const e={cliente_id:id,quem:'nutri',tipo:'dieta',txt:velho?'Dados novos da cliente: nova sugestão de dieta gerada.':'Sugestão de dieta gerada para revisão.',t:iso()};EV_ATUAL.unshift(e);sbA.from('eventos').insert(e);}
+    admView='dieta';renderAdmin();window.scrollTo(0,0);
+  }catch(e){aviso('Não consegui abrir esta cliente. Tente de novo.');renderAdmClientes();}
+}
+function removerClienteNuvem(id){
+  ask('Excluir esta cliente e todo o histórico dela? Isso não pode ser desfeito.',async()=>{
+    const r=await sbA.from('clientes').delete().eq('id',id);
+    if(r.error){aviso('Não consegui excluir. Tente de novo.');return;}
+    dados=null;dieta=null;pesos=[];checks={};trocas={};EV_ATUAL=[];
+    admView='clientes';renderAdmin();
+  });
+}
+function restaurarDono_unused(){}
+function entrarNutri_placeholder(){}
 let admView='clientes';
 function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button></div>`;}
 const GRUPOS_AL=[['extra','Livre (só para incluir nas dietas)'],['carbo','Carboidrato'],['prot','Proteína'],['leg','Leguminosa'],['fruta','Fruta'],['veg','Vegetal'],['gord','Gordura boa'],['lat','Laticínio ou bebida']];
@@ -1457,14 +1664,14 @@ function restaurarDono2(){
   }catch(e){}
 }
 const fmtData=t=>{const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
-function abrirCliente(id){
+function abrirCliente_local(id){
   sync();
   const r=CL().find(x=>x.id===id);if(!r)return;
   dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;
   try{localStorage.setItem('nutri3_dados',JSON.stringify(dados));localStorage.setItem('nutri3_dieta',JSON.stringify(dieta));localStorage.setItem('nutri3_pesos',JSON.stringify(pesos));localStorage.setItem('nutri3_checks',JSON.stringify(checks));localStorage.setItem('nutri3_trocas',JSON.stringify(trocas));}catch(e){}
   admView='dieta';renderAdmin();window.scrollTo(0,0);
 }
-function removerCliente(id,semDialogo){
+function removerCliente_local(id,semDialogo){
   if(!id)return;
   const fazer=()=>{
     saveCL(CL().filter(x=>x.id!==id));
@@ -1498,7 +1705,7 @@ function importarBackup(){
     aviso('Backup importado: '+(b.clientes||[]).length+' cliente(s).');renderAdmin();
   }catch(e){aviso('Não consegui ler esse backup. Confira se colou o texto inteiro.');}
 }
-function renderAdmClientes(){
+function renderAdmClientes_local(){
   const o=$('adminOut');
   const l=CL().slice().sort((a,b)=>{const pa=(a.dieta&&a.dieta.status==='aprovada')?1:0,pb=(b.dieta&&b.dieta.status==='aprovada')?1:0;return pa-pb||(b.atualizado||0)-(a.atualizado||0);});
   const pend=l.filter(r=>!(r.dieta&&r.dieta.status==='aprovada')).length;
@@ -1547,7 +1754,7 @@ function renderAdmin(){
    ${dieta.status==='aprovada'?`<button class="full light" onclick="dieta.status='pendente';save('dieta',dieta);logH('aprovacao','Dieta voltou para revisão.');renderAdmin()">Voltar para em revisão</button>`:''}
    <button class="full light" onclick="refazerDieta()">Refazer plano do zero</button>
    <button class="full light" onclick="admView='clientes';renderAdmin()">Voltar para a lista de clientes</button></div>`;
-  const hist=((CL().find(x=>x.id===dados.id)||{}).hist||[]).slice().reverse();
+  const hist=histAtual().slice().sort((a,b)=>b.t-a.t);
   h+=`<div class="card"><h2>Histórico</h2>`+(hist.length?hist.slice(0,60).map(e=>`<div class="hl"><span>${fmtData(e.t)}</span><p>${esc(e.txt)}</p></div>`).join(''):'<div class="sub">Ainda sem registros.</div>')+`</div>
    <div class="card"><button class="full light" style="color:#8a2a30" onclick="removerCliente('${dados.id}')">Excluir esta cliente</button></div>`;
   o.innerHTML=h;
@@ -1867,6 +2074,7 @@ function nomeAtual(){const d=(dados&&dados.nome!=='Você')?dados.nome:'';return 
 function mostrarNome(){const nc=nomeAtual(),n=nc.split(/\s+/)[0];$('hi').textContent=n?'Olá, '+n:'Olá';$('av').textContent=n?n.charAt(0).toUpperCase():'N';}
 function saudar(){nomeRascunho=$('nome').value.trim();save('nome',nomeRascunho);mostrarNome();}
 function preencherForm(){
+  if(dados)$('aceite').checked=true;
   if(!dados){$('nome').value=nomeRascunho;return;}
   $('nome').value=nomeRascunho||(dados.nome==='Você'?'':dados.nome);
   ['sexo','idade','altura','peso','atv','obj','refs'].forEach(k=>{if(dados[k]!=null)$(k).value=dados[k];});
@@ -1893,6 +2101,7 @@ function tab(t,semEmpilhar){
   if(t==='inicio')renderInicio();if(t==='dieta')renderDieta();if(t==='alimentos')renderAlimentos();if(t==='objetivo'){objInit();renderObjetivo();}if(t==='compras')renderCompras();if(t==='receitas')renderReceitas();
   if(t==='progresso')renderGrafico();if(t==='admin')renderAdmin();
   $('btnVoltar').style.display=(t==='inicio'&&!verApres)?'none':'inline-flex';
+  if(NUVEM&&!nutriMode&&(t==='inicio'||t==='dieta'||t==='compras'))nuvemAtualizar();
   window.scrollTo(0,0);
 }
 function voltar(){
@@ -1921,15 +2130,17 @@ if(dados){
 /* Link com #novo abre o app do zero, como o de uma pessoa nova (apaga os dados deste aparelho) */
 function apagarDados(){
   ask('Isso apaga os seus dados, a sua dieta e o seu progresso neste aparelho e volta para o início. Deseja continuar?',()=>{
-    removerCliente(dados&&dados.id,true);
-    recomecar();
+    const idApagar=dados&&dados.id;nuvemApagar(idApagar);
+    removerCliente(idApagar,true);
+    recomecar();$('aceite').checked=false;
     $('nome').value='';$('sexo').value='f';$('idade').value=30;$('altura').value=165;$('peso').value=70;$('atv').value=2;$('obj').value='emagrecer';$('refs').value=4;$('dislikes').value='';
     document.querySelectorAll('#restr input').forEach(i=>i.checked=false);metaTocada=false;formMeta();
     nutriMode=false;tab('inicio');
   });
 }
 function recomecar(){['dados','dieta','pesos','checks','trocas','nome'].forEach(k=>{try{localStorage.removeItem('nutri3_'+k)}catch(e){}});dados=null;dieta=null;pesos=[];checks={};trocas={};nomeRascunho='';mealSel=0;objD=null;}
-if(location.hash==='#novo'){recomecar();history.replaceState&&history.replaceState(null,'',location.pathname+location.search);}
+if(location.hash==='#novo'){nuvemApagar(dados&&dados.id);recomecar();history.replaceState&&history.replaceState(null,'',location.pathname+location.search);}
+if(NUVEM){document.addEventListener('visibilitychange',()=>{if(!document.hidden)nuvemAtualizar();});setInterval(()=>{if(!document.hidden)nuvemAtualizar();},30000);if(dados&&dados.id)nuvemPush();}
 formMeta();
 tab('inicio');
 </script>
