@@ -1719,7 +1719,7 @@ function removerClienteNuvem(id){
 function restaurarDono_unused(){}
 function entrarNutri_placeholder(){}
 let admView='clientes';
-function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';bibCarregar();renderAdmin()">Biblioteca</button></div>`;}
+function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';bibCarregar();renderAdmin()">Biblioteca</button><button class="${admView==='modelos'?'on':''}" onclick="admView='modelos';(BIB.length?Promise.resolve():bibCarregar()).then(renderAdmin);renderAdmin()">Modelos</button></div>`;}
 const GRUPOS_AL=[['extra','Livre (só para incluir nas dietas)'],['carbo','Carboidrato'],['prot','Proteína'],['leg','Leguminosa'],['fruta','Fruta'],['veg','Vegetal'],['gord','Gordura boa'],['lat','Laticínio ou bebida']];
 const SECOES=['Hortifruti','Açougue','Laticínios','Mercearia','Outros'];
 function renderAdmAlimentos(){
@@ -1836,6 +1836,7 @@ function renderAdmin(){
   if(admView==='clientes'){renderAdmClientes();return;}
   if(admView==='alimentos'){renderAdmAlimentos();return;}
   if(admView==='biblioteca'){renderAdmBiblioteca();return;}
+  if(admView==='modelos'){renderAdmModelos();return;}
   if(!dados||!dieta){o.innerHTML=admNav()+`<div class="card"><h2>Área da nutricionista</h2><p>Nenhuma cliente selecionada. Escolha uma na lista de clientes.</p><button onclick="admView='clientes';renderAdmin()">Ver clientes</button></div>`;return;}
   const t=totaisDia(dieta),m=dieta.meta;
   const pc=(a,b)=>Math.round(a/b*100);
@@ -1925,6 +1926,56 @@ function removerFoto(mi){const me=dieta.meals[mi];delete me.foto;save('dieta',di
 let BIB=load('biblioteca',[]);
 function bibReg(b){(b.extras||[]).forEach(f=>{if(f.u&&f.u.g>=60&&f.st>.5)f.st=.5;if(!F[f.id]){FOODS.push(f);F[f.id]=f;}});}
 BIB.forEach(bibReg);
+
+/* ===== Dietas modelo: dias completos gerados com a biblioteca para perfis típicos, só para avaliar ===== */
+const MOD_BASE={sexo:'f',idade:35,altura:162,peso:68,atv:2,obj:'manter',ajuste:0,refs:6,restr:[],caneta:false,dislikes:[]};
+const MODELOS=[
+ {id:'f1200',n:'1.200 kcal',d:'Mulher',kcal:1200,p:{}},
+ {id:'f1500',n:'1.500 kcal',d:'Mulher',kcal:1500,p:{}},
+ {id:'f1800',n:'1.800 kcal',d:'Mulher ativa',kcal:1800,p:{atv:3}},
+ {id:'m2000',n:'2.000 kcal',d:'Homem',kcal:2000,p:{sexo:'m',idade:38,altura:176,peso:82}},
+ {id:'m2500',n:'2.500 kcal',d:'Homem ativo',kcal:2500,p:{sexo:'m',idade:30,altura:180,peso:84,atv:3}},
+ {id:'cf',n:'Caneta',d:'Mulher, 82 kg',kcal:1300,p:{peso:82,caneta:true}},
+ {id:'cm',n:'Caneta',d:'Homem, 95 kg',kcal:1500,p:{sexo:'m',idade:42,altura:178,peso:95,caneta:true}},
+ {id:'veg',n:'Vegetariana',d:'1.500 kcal',kcal:1500,p:{restr:['veg']}},
+ {id:'vegan',n:'Vegana',d:'1.500 kcal',kcal:1500,p:{restr:['vegan']}},
+ {id:'lac',n:'Sem lactose',d:'1.500 kcal',kcal:1500,p:{restr:['lac']}},
+ {id:'glu',n:'Sem glúten',d:'1.500 kcal',kcal:1500,p:{restr:['glu']}},
+ {id:'lacglu',n:'Sem lactose e sem glúten',d:'1.500 kcal',kcal:1500,p:{restr:['lac','glu']}}
+];
+let modSel='f1500',modCache={};
+function modGerar(id,novo){
+  if(!novo&&modCache[id])return modCache[id];
+  const m=MODELOS.find(x=>x.id===id),p={...MOD_BASE,...m.p};
+  const g=baseEnergia(p).get;
+  if(m.kcal>g){p.obj='ganhar';p.ajuste=m.kcal-g;}else{p.obj='emagrecer';p.ajuste=g-m.kcal;}
+  return modCache[id]={p,d:gerarDieta(p)};
+}
+function modSelecionar(id){modSel=id;renderAdmModelos();}
+function modOutra(){delete modCache[modSel];modGerar(modSel,true);renderAdmModelos();}
+function renderAdmModelos(){
+  const o=$('adminOut'),m=MODELOS.find(x=>x.id===modSel),{p,d}=modGerar(modSel);
+  const t=totaisDia(d),r10=k=>Math.round(k/10)*10;
+  let h=admNav()+`<div class="card"><h2>Dietas <em>modelo</em></h2><div class="sub">Dias completos montados com a biblioteca para perfis típicos. Servem para você avaliar como as dietas saem. Nada aqui vai para nenhuma cliente.${BIB.length?'':' A biblioteca ainda não carregou, então estas dietas saem do plano padrão.'}</div>
+   <div class="chips" style="margin-top:10px">${MODELOS.map(x=>`<label><input type="radio" name="md" ${x.id===modSel?'checked':''} onclick="modSelecionar('${x.id}')">${x.n}<small style="color:var(--muted)"> · ${x.d}</small></label>`).join('')}</div></div>`;
+  h+=`<div class="card"><h3 style="margin-top:0">${m.n} · ${m.d}</h3>
+   <div class="sub">Meta ${Math.round(d.meta.kcal)} kcal, proteína ${d.meta.prot} g · dia montado: <b>${r10(t.k)} kcal</b>, proteína ${Math.round(t.p)} g, carboidratos ${Math.round(t.c)} g, gorduras ${Math.round(t.g)} g${p.caneta?' · perfil caneta (sem glúten e sem farinha)':''}</div>
+   <button class="mini" onclick="modOutra()" style="margin-top:10px">Gerar outra versão</button></div>`;
+  d.meals.forEach(me=>{
+    const tt=totais(me),foto=fotoDe(me),its=me.itens;
+    h+=`<div class="card" style="padding:0;overflow:hidden"><div style="display:flex;gap:14px;padding:14px">
+      <div style="flex:none;width:96px;height:120px;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(160deg,#ecdfcb,#d8c6ac)">${foto?`<img src="${foto}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.remove()">`:''}</div>
+      <div style="min-width:0;flex:1"><div class="lbl2" style="font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${me.nome}</div>
+      <div style="font:400 20px/1.1 var(--serif);margin:3px 0 8px">${esc(me.titulo)}</div>
+      <div style="font-size:13px;color:var(--muted)"><b style="color:var(--ink)">${r10(tt.k)} kcal</b> · P ${Math.round(tt.p)} g · C ${Math.round(tt.c)} g · G ${Math.round(tt.g)} g</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${me.bibId?'Da biblioteca':'Plano padrão'}</div></div></div>
+      <details style="border-top:1px solid var(--line);padding:10px 14px"><summary style="cursor:pointer;font-size:13px">Composição e modo de preparo</summary>
+      ${its.map(i=>`<div class="cr" style="padding:6px 0"><div class="cr-t"><b style="font-size:13px;font-weight:500">${esc(F[i.f].n)}</b><span>${medida(F[i.f],i.g)}</span></div></div>`).join('')}
+      ${prepDe(me)?`<div class="obs"><b>Modo de preparo</b><p style="white-space:pre-line">${esc(prepDe(me))}</p></div>`:''}
+      ${p.caneta&&me.notaCaneta?`<div class="obs"><b>Orientação (caneta)</b><p>${esc(me.notaCaneta)}</p></div>`:''}</details></div>`;
+  });
+  o.innerHTML=h;
+}
 async function bibCarregar(){
   if(!NUVEM)return;
   try{let r=await sbA.from('biblioteca').select('id,nome,tipo,dados,criado,perfil,contem,dieta_tipo,grupo,variante,preparo,ativo').order('criado',{ascending:false});
