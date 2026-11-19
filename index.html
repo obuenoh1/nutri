@@ -711,6 +711,7 @@
         <label><input type="checkbox" value="oleaginosas">Sem castanhas e nozes</label>
         <label><input type="checkbox" value="soja">Sem soja</label>
       </div>
+      <label class="aceite"><input type="checkbox" id="caneta"><span>Uso caneta emagrecedora (o cardápio vem com as orientações específicas)</span></label>
       <label>Alimentos que eu não gosto ou não como</label>
       <input id="dislikes" placeholder="ex.: peixe, tofu, lentilha (separe por vírgula)">
       <label class="aceite"><input type="checkbox" id="aceite"><span>Concordo que a nutricionista guarde e use os meus dados de saúde para montar o meu plano. Posso apagá-los quando quiser.</span></label>
@@ -1318,7 +1319,7 @@ function formMeta(tocou){
 function salvarDados(){
   const novo={id:dados&&dados.id,nome:$('nome').value.trim(),sexo:$('sexo').value,idade:num($('idade').value),altura:num($('altura').value),peso:num($('peso').value),
     atv:+$('atv').value,obj:$('obj').value,refs:+$('refs').value,ajuste:0,formula:(dados&&dados.formula)||'auto',
-    restr:[...document.querySelectorAll('#restr input:checked')].map(i=>i.value),
+    restr:[...document.querySelectorAll('#restr input:checked')].map(i=>i.value),caneta:$('caneta').checked,
     dislikes:$('dislikes').value.toLowerCase().split(',').map(s=>s.trim()).filter(Boolean)};
   if(!novo.nome){alert('Me diga como posso te chamar.');$('nome').focus();return;}
   if(NUVEM&&!$('aceite').checked){alert('Para enviar, marque o aceite sobre o uso dos seus dados.');return;}
@@ -1384,6 +1385,7 @@ function renderDieta(){
       ${its.map(it=>{const f=F[it.f];return `<div class="cr">${thumb(f)}<div class="cr-t"><b>${esc(f.n)}</b>${it.troca?'<em class="altb">alternativa escolhida</em>':''}<span>${it.g} g | ${curta(f,it.g)}</span></div></div>`;}).join('')}
       <div class="ptn">PTN = <b>${Math.round(tt.p)} g</b> &nbsp;·&nbsp; CHO = <b>${Math.round(tt.c)} g</b> &nbsp;·&nbsp; LIP = <b>${Math.round(tt.g)} g</b></div>
       ${meal.obs?`<div class="obs"><b>Observação</b><p>${esc(meal.obs)}</p></div>`:''}
+      ${dados&&dados.caneta&&meal.notaCaneta?`<div class="obs"><b>Orientação</b><p>${esc(meal.notaCaneta)}</p></div>`:''}
       <h3>Alternativas</h3>
       <p class="sub" style="margin:-4px 0 10px">Opcionais. Escolha só se quiser trocar. Não é para comer junto com o alimento original.</p>
       ${meal.itens.map((it,i)=>{const subs=substituicoes(it,meal.tipo,dados);if(!subs.length)return '';const f=F[it.f],cur=trocas[mi+':'+i];
@@ -1812,6 +1814,7 @@ function renderAdmin(){
   let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
    <div class="sub">${dados.sexo==='f'?'F':'M'}, ${dados.idade} anos, ${dados.peso} kg, ${dados.altura} cm · IMC ${br(m.imc)} · ${dados.refs} refeições · restrições: ${dados.restr.join(', ')||'nenhuma'}${dados.dislikes.length?' · não gosta: '+esc(dados.dislikes.join(', ')):''}</div>
    <div class="sub" style="margin-top:6px">Meta da cliente: ${dados.metaKg?`perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'sem meta em quilos'}</div>
+   <div class="sub" style="margin-top:6px">Usa caneta emagrecedora: <b>${dados.caneta?'sim':'não'}</b> <button class="mini light" onclick="toggleCaneta()">${dados.caneta?'marcar que não usa':'marcar que usa'}</button></div>
    <div class="sub" style="margin-top:6px">Equação: <select onchange="setFormula(this.value)" style="width:auto;display:inline-block;padding:6px 10px"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática (Mifflin se emagrecer ou IMC 25+, senão OMS)</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS (FAO/WHO/UNU)</option></select></div>
    <div class="sub" style="margin-top:6px">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: TMB ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}</div>
    <div class="sub" style="margin-top:6px">Objetivo: ${dados.obj==='emagrecer'?'emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'ganhar massa, superávit de '+dados.ajuste+' kcal':'manter'} · Método: ${m.metodo} · gasto basal ${m.tmb} kcal · gasto total ${m.get} kcal</div>
@@ -1896,7 +1899,7 @@ async function bibSalvar(mi){
   const me=dieta.meals[mi];if(!me.itens.length){alert('Esta refeição está sem alimentos.');return;}
   const ids=new Set(me.itens.map(i=>i.f));
   const e={id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome:me.titulo,tipo:me.nome,criado:iso(),
-    titulo:me.titulo,desc:me.desc||'',obs:me.obs||'',foto:me.foto||'',prato:me.prato||'',
+    titulo:me.titulo,desc:me.desc||'',obs:me.obs||'',foto:me.foto||'',prato:me.prato||'',notaCaneta:me.notaCaneta||'',
     itens:me.itens.map(i=>({f:i.f,g:Math.round(i.g)})),extras:EXTRAS.filter(f=>ids.has(f.id))};
   BIB.unshift(e);save('biblioteca',BIB);
   if(NUVEM){const {id,nome,tipo,criado,...dados}=e;const r=await sbA.from('biblioteca').upsert({id,nome,tipo,criado,dados});if(r.error){aviso('Salva só neste aparelho: '+r.error.message);return;}}
@@ -1920,7 +1923,7 @@ function bibAplicar(mi,id){
     const itens=b.itens.filter(i=>F[i.f]);
     me.itens=itens.map(i=>({f:i.f,g:i.g}));me.titulo=b.titulo;me.desc=b.desc;me.obs=b.obs;
     if(b.foto)me.foto=b.foto;else delete me.foto;
-    me.prato=b.prato||undefined;me.bibId=b.id;me.editado=true;
+    me.prato=b.prato||undefined;me.notaCaneta=b.notaCaneta||'';me.bibId=b.id;me.editado=true;
     save('dieta',dieta);admAb.add(mi);logH('edicao',me.nome+': trocou pela refeição "'+b.nome+'" da biblioteca');renderAdmin();});
 }
 async function bibRemover(id){
@@ -1953,7 +1956,7 @@ async function bibSalvarEd(id){
   if(bibRasc.some(i=>!(i.g>0))){alert('Há um alimento com quantidade zero. Remova o alimento ou informe a quantidade.');return;}
   if(!b.itensOriginais)b.itensOriginais=b.itens.map(i=>({...i}));
   b.itens=bibRasc.map(i=>({f:i.f,g:Math.round(i.g)}));
-  b.nome=b.titulo=($('bibt').value.trim()||b.nome);b.obs=$('bibp').value.trim();b.editadoEm=iso();
+  b.nome=b.titulo=($('bibt').value.trim()||b.nome);b.obs=$('bibp').value.trim();b.notaCaneta=$('bibn').value.trim();b.editadoEm=iso();
   if(await bibGravar(b)){logH('edicao','Biblioteca: ajustou o modelo base "'+b.nome+'"');aviso('Modelo base salvo. As próximas dietas já usam estas quantidades.');}
   bibAberta=null;bibRasc=null;renderAdmBiblioteca();
 }
@@ -1968,6 +1971,7 @@ function bibEditor(b){
   ${bibRasc.map((i,ix)=>`<div class="row" style="align-items:center;margin:4px 0"><span style="flex:1">${esc(nomes(i))}</span><input type="text" inputmode="decimal" value="${i.g}" style="width:84px" oninput="bibQtd(${ix},this.value)"><span class="sub" style="margin-left:6px">g</span></div>`).join('')}
   <div class="sub" style="margin:8px 0">Total: <b id="bibtot">${bibResumo(bibTotaisRasc())}</b></div>
   <label>Modo de preparo</label><textarea id="bibp" rows="4" style="width:100%">${esc(b.obs||'')}</textarea>
+  <label>Orientação só para quem usa caneta</label><textarea id="bibn" rows="2" style="width:100%" placeholder="Ex.: Para a caneta: legumes bem cozidos e sem casca.">${esc(b.notaCaneta||'')}</textarea>
   <div class="row" style="margin-top:10px"><button class="mini" onclick="bibSalvarEd('${b.id}')">Salvar como modelo base</button><button class="mini light" onclick="bibAbrir('${b.id}')">Cancelar</button>${b.itensOriginais?`<button class="mini light" onclick="bibRestaurar('${b.id}')">Voltar ao original</button>`:''}</div></div>`;
 }
 function renderAdmBiblioteca(){
@@ -2034,6 +2038,11 @@ function salvarAlim(mi){
   FOODS.push(f);F[f.id]=f;EXTRAS.push(f);save('extras',EXTRAS);addAlim(mi,'f',f.id);
 }
 function addItem(mi){dieta.meals[mi].editado=true;const id=$('add'+mi).value;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);renderAdmin();}
+async function toggleCaneta(){
+  dados.caneta=!dados.caneta;save('dados',dados);
+  if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
+  logH('edicao','Uso de caneta emagrecedora: '+(dados.caneta?'sim':'não'));renderAdmin();
+}
 function setFormula(v){
   if(!window._ok4){ask('Trocar a equação recalcula as metas e gera a dieta de novo, descartando edições. Continuar?',()=>{window._ok4=1;setFormula(v);window._ok4=0},()=>renderAdmin());return;}
   dados.formula=v;save('dados',dados);dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;logH('edicao','Equação trocada para '+({auto:'automática',mifflin:'Mifflin-St Jeor',oms:'OMS'})[v||'auto']+'. Dieta refeita.');renderAdmin();
@@ -2298,7 +2307,7 @@ function nomeAtual(){const d=(dados&&dados.nome!=='Você')?dados.nome:'';return 
 function mostrarNome(){const nc=nomeAtual(),n=nc.split(/\s+/)[0];$('hi').textContent=n?'Olá, '+n:'Olá';$('av').textContent=n?n.charAt(0).toUpperCase():'N';}
 function saudar(){nomeRascunho=$('nome').value.trim();save('nome',nomeRascunho);mostrarNome();}
 function preencherForm(){
-  if(dados)$('aceite').checked=true;
+  if(dados){$('aceite').checked=true;$('caneta').checked=!!dados.caneta;}
   if(!dados){$('nome').value=nomeRascunho;return;}
   $('nome').value=nomeRascunho||(dados.nome==='Você'?'':dados.nome);
   ['sexo','idade','altura','peso','atv','obj','refs'].forEach(k=>{if(dados[k]!=null)$(k).value=dados[k];});
