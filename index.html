@@ -1152,7 +1152,9 @@ const DIST={
  5:[['cafe','cafe',.22],['lanchem','lanche',.1],['almoco','almoco',.3],['lanche','lanche',.13],['jantar','jantar',.25]],
  6:[['cafe','cafe',.2],['lanchem','lanche',.1],['almoco','almoco',.28],['lanche','lanche',.12],['jantar','jantar',.22],['ceia','ceia',.08]]
 };
-const distDe=p=>{const d=DIST[p.refs];const c=p.caneta&&CANETA.dist[p.refs];return c?d.map((x,i)=>[x[0],x[1],c[i]]):d;};
+const distDe=p=>{let d=DIST[p.refs];const c=p.caneta&&CANETA.dist[p.refs];if(c)d=d.map((x,i)=>[x[0],x[1],c[i]]);
+  const sem=p.sem||[];if(sem.length){d=d.filter(x=>!sem.includes(x[0]));const t=d.reduce((a,x)=>a+x[2],0);d=d.map(x=>[x[0],x[1],x[2]/t]);} /* refeições removidas: as calorias delas passam para as que ficam */
+  return d;};
 const MTAG={cafe:'cafe',lanche:'lanche',almoco:'prato',jantar:'prato',ceia:'ceia'};
 const CAP={prot:180,carbo:240,fruta:180,gord:40,lat:340,rec:200};
 const pickOf=a=>a[Math.floor(Math.random()*a.length)];
@@ -1236,7 +1238,7 @@ function gerarRefeicao(chave,tipo,pct,p,meta,usados){
   const m=MTAG[tipo];
   const bb=bibEscolher(chave,p,usados);
   if(bb){usados.add(bb.g);const b=bb.b;
-    return {nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,preparo:b.obs||'',obs:'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
+    return {chave,nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,preparo:b.obs||'',obs:'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
   const lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
   let esc_,titulo,pratoId=null;
   if(lista.length){const e=escolherPadrao(lista,p.obj,tipo);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
@@ -1255,7 +1257,7 @@ function gerarRefeicao(chave,tipo,pct,p,meta,usados){
   const fator=Math.min(2.6,Math.max(.6,(alvo-fixo)/vari));
   const capDe=(f,id)=>id==='ovo'?150:(tipo==='cafe'&&f.grp==='prot'?120:(CAP[f.grp]||999));
   const itens=esc_.map(i=>{const f=F[i.f];return {f:i.f,g:capar(f,arred(f,i.v?i.g*fator:i.g),capDe(f,i.f))};});
-  return {nome:L.refeicoes[chave],tipo,titulo,prato:pratoId,itens,dica:pickOf(L.dicas[tipo])};
+  return {chave,nome:L.refeicoes[chave],tipo,titulo,prato:pratoId,itens,dica:pickOf(L.dicas[tipo])};
 }
 /* Balanceamento final: ajusta as quantidades, de uma medida caseira por vez, até o dia chegar o mais perto
    possível das metas de calorias, proteína, carboidrato e gordura, mantendo a divisão entre as refeições. */
@@ -1849,6 +1851,7 @@ function renderAdmin(){
    <div class="sub" style="margin-top:6px">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: TMB ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}</div>
    <div class="sub" style="margin-top:6px">Objetivo: ${dados.obj==='emagrecer'?'emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'ganhar massa, superávit de '+dados.ajuste+' kcal':'manter'} · Método: ${m.metodo} · gasto basal ${m.tmb} kcal · gasto total ${m.get} kcal</div>
    ${t.k<m.kcal*.9?`<div class="alert" style="margin-top:12px">A dieta ficou em ${Math.round(t.k/m.kcal*100)}% da meta de calorias. As restrições e os alimentos excluídos limitam as opções. Ajuste as quantidades ou acrescente alimentos antes de aprovar.</div>`:''}<div id="admGaps"></div>
+   ${(dados.sem||[]).length?`<div class="info" style="margin-top:12px">Refeições removidas desta cliente: ${(dados.sem||[]).map(c=>`<b>${L.refeicoes[c]||c}</b> <button class="mini light" onclick="restaurarRefeicao('${c}')">Trazer de volta</button>`).join(' ')}</div>`:''}
    <div class="row" style="margin-top:14px;font-size:14px"><div>Energia: <b>${Math.round(t.k)}</b> de ${m.kcal} kcal</div><div>Proteína: <b>${Math.round(t.p)}</b> de ${m.prot} g</div><div>Carboidrato: <b>${Math.round(t.c)}</b> de ${m.carb} g</div><div>Gordura: <b>${Math.round(t.g)}</b> de ${m.gord} g</div></div></div>`;
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
@@ -1868,7 +1871,7 @@ function renderAdmin(){
         <button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div>`;
     });
     h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="row" style="margin-top:12px"><button class="mini" onclick="bibPainel(${mi})">Trocar por uma da biblioteca</button><button class="mini light" onclick="bibSalvar(${mi})">Salvar esta na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="mini light" onclick="bibAtualizarDe(${mi})">Atualizar o modelo base com estas quantidades</button>`:''}</div><div id="bib${mi}"></div>
+      <div class="row" style="margin-top:12px"><button class="mini" onclick="bibPainel(${mi})">Trocar por uma da biblioteca</button><button class="mini light" onclick="removerRefeicao(${mi})">Remover esta refeição</button><button class="mini light" onclick="bibSalvar(${mi})">Salvar esta na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="mini light" onclick="bibAtualizarDe(${mi})">Atualizar o modelo base com estas quantidades</button>`:''}</div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
       <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(obsDe(meal))}</textarea></div></details>`;
   });
@@ -2127,6 +2130,42 @@ function salvarAlim(mi){
   FOODS.push(f);F[f.id]=f;EXTRAS.push(f);save('extras',EXTRAS);addAlim(mi,'f',f.id);
 }
 function addItem(mi){dieta.meals[mi].editado=true;const id=$('add'+mi).value;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);renderAdmin();}
+
+/* ===== Remover / voltar uma refeição da dieta da cliente (as calorias são redistribuídas) ===== */
+const chaveDe=me=>me.chave||Object.keys(L.refeicoes).find(k=>L.refeicoes[k]===me.nome)||'';
+async function salvarDadosSem(){
+  save('dados',dados);
+  if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
+}
+function recalcular(msg){
+  balancear(dieta,dados);save('dieta',dieta);mealSel=Math.min(mealSel,dieta.meals.length-1);
+  const t=totaisDia(dieta),k=dieta.meta.kcal,pc=Math.round(t.k/k*100);
+  logH('edicao',msg+' Dieta recalculada: '+Math.round(t.k)+' kcal ('+pc+'% da meta).');
+  admAb=new Set();renderAdmin();
+  if(Math.abs(pc-100)>6)aviso('A dieta ficou em '+pc+'% da meta ('+Math.round(t.k)+' de '+Math.round(k)+' kcal): as porções não podem crescer mais sem ficar exageradas. Ajuste à mão ou acrescente um alimento.');
+}
+function removerRefeicao(mi){
+  const me=dieta.meals[mi],c=chaveDe(me);
+  if(dieta.meals.length<=2){aviso('A dieta precisa ter pelo menos 2 refeições.');return;}
+  if(!c){aviso('Não consegui identificar esta refeição.');return;}
+  ask('Remover "'+me.nome+'" da dieta desta cliente? As calorias dela serão distribuídas entre as outras refeições. Você pode trazê-la de volta depois.',async()=>{
+    dados.sem=[...(dados.sem||[]).filter(x=>x!==c),c];
+    dieta.meals.splice(mi,1);
+    const nt={};Object.keys(trocas).forEach(k=>{const [a,b]=k.split(':').map(Number);if(a<mi)nt[k]=trocas[k];else if(a>mi)nt[(a-1)+':'+b]=trocas[k];});trocas=nt;save('trocas',trocas);
+    await salvarDadosSem();recalcular(me.nome+' removida.');
+  });
+}
+async function restaurarRefeicao(c){
+  const lista=DIST[dados.refs]||[],ent=lista.find(x=>x[0]===c);if(!ent)return;
+  if(!BIB.length)await bibCarregar();
+  dados.sem=(dados.sem||[]).filter(x=>x!==c);
+  const usados=new Set(dieta.meals.map(m=>{const b=m.bibId&&BIB.find(x=>x.id===m.bibId);return b?(b.grupo||b.id):''}));
+  const nova=gerarRefeicao(c,ent[1],ent[2],dados,dieta.meta,usados);
+  const ordem=lista.map(x=>x[0]);let pos=dieta.meals.findIndex(m=>ordem.indexOf(chaveDe(m))>ordem.indexOf(c));if(pos<0)pos=dieta.meals.length;
+  dieta.meals.splice(pos,0,nova);
+  const nt={};Object.keys(trocas).forEach(k=>{const [a,b]=k.split(':').map(Number);nt[(a>=pos?a+1:a)+':'+b]=trocas[k];});trocas=nt;save('trocas',trocas);
+  await salvarDadosSem();recalcular(nova.nome+' de volta à dieta.');
+}
 async function refazerBib(){
   if(!BIB.length)await bibCarregar();
   if(!BIB.length){aviso('A biblioteca ainda não carregou. Abra a aba Biblioteca e tente de novo.');return;}
