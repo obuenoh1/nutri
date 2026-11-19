@@ -1971,6 +1971,8 @@ function renderAdmModelos(){
       <div style="font-size:11px;color:var(--muted);margin-top:4px">${me.bibId?'Da biblioteca':'Plano padrão'}</div></div></div>
       <details style="border-top:1px solid var(--line);padding:10px 14px"><summary style="cursor:pointer;font-size:13px">Composição e modo de preparo</summary>
       ${its.map(i=>`<div class="cr" style="padding:6px 0"><div class="cr-t"><b style="font-size:13px;font-weight:500">${esc(F[i.f].n)}</b><span>${medida(F[i.f],i.g)}</span></div></div>`).join('')}
+      <h3 style="margin:14px 0 4px;font-size:15px">Substituições</h3>
+      ${its.map(it=>{const subs=substituicoes(it,me.tipo,p);if(!subs.length)return '';return `<details class="altd"><summary><span>Em vez de <b>${esc(F[it.f].n.toLowerCase())}</b></span><em>${subs.length}</em></summary><div class="altl">${subs.map(o=>`<div class="ar" style="cursor:default"><div class="cr-t"><b>${esc(o.x.n)}</b><span>${o.g} g | ${curta(o.x,o.g)}</span>${o.dif?`<small class="df">${o.dif}</small>`:''}</div></div>`).join('')}</div></details>`;}).join('')}
       ${prepDe(me)?`<div class="obs"><b>Modo de preparo</b><p style="white-space:pre-line">${esc(prepDe(me))}</p></div>`:''}
       ${p.caneta&&me.notaCaneta?`<div class="obs"><b>Orientação (caneta)</b><p>${esc(me.notaCaneta)}</p></div>`:''}</details></div>`;
   });
