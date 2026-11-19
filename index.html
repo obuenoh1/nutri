@@ -439,25 +439,27 @@
   .mchips button{background:#fbf7f0;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:500;white-space:nowrap}
   .mchips button.on{background:#713C43;color:#fff;border-color:#713C43}
   .mv{background:var(--card);border-radius:26px;overflow:hidden;box-shadow:0 1px 2px rgba(74,21,34,.05),0 12px 34px rgba(74,21,34,.06)}
-  .mv-ph{position:relative;aspect-ratio:4/3;background:#e9dcc8;overflow:hidden}
+  .mv-ph{position:relative;aspect-ratio:4/5;background:#e9dcc8;overflow:hidden}
   .mv-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .mv-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,8,12,0) 45%,rgba(30,8,12,.72) 100%)}
-  .mv-txt{position:absolute;left:0;right:0;bottom:0;padding:20px 22px;color:#fbf1e6}
-  .mv-txt .lbl2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:4px;font-weight:600}
-  .mv-txt h2{color:#fbf1e6;font-size:30px;line-height:1.05;margin:0}
-  .mv-txt p{margin:6px 0 0;font-size:13px;opacity:.9}
+  .mv-ov{position:absolute;left:0;right:0;top:0;height:42%;background:linear-gradient(180deg,rgba(250,247,242,.92),rgba(250,247,242,0))}
+  .mv-txt{position:absolute;left:0;right:0;top:0;padding:18px 20px 0;color:var(--ink)}
+  .mv-txt .lbl2{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;font-weight:600}
+  .mv-txt h2{color:var(--ink);font-size:26px;line-height:1.05;margin:0;max-width:88%}
+  .mv-txt p{margin:6px 0 0;font-size:13px;color:var(--muted)}
   .mv-ph.noimg{background:linear-gradient(160deg,#ecdfcb,#d8c6ac);aspect-ratio:16/8}
   .mv-ph.noimg .mv-ov{background:none}
   .mv-ph.noimg .mv-txt{color:#3f2227;bottom:auto;top:50%;transform:translateY(-50%)}
   .mv-ph.noimg .mv-txt h2{color:#3f2227}
-  .mv-sheet{padding:20px 20px 24px}
-  .mv-cal{display:flex;align-items:baseline;gap:8px;justify-content:center;margin-bottom:12px}
-  .mv-cal b{font-family:var(--serif);font-weight:400;font-size:52px;letter-spacing:-.02em;line-height:1}
-  .mv-cal span{color:var(--muted);font-size:14px}
-  .mv-mac{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .mv-mac div{border-radius:16px;padding:12px 8px;text-align:center}
-  .mv-mac span{display:block;font-size:11px;color:#7f6358;margin-bottom:2px}
-  .mv-mac b{font-size:17px;font-weight:600}
+  .mv-sheet{padding:0 20px 24px}
+  .mv-card{position:relative;margin:-46px 0 14px;background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 6px 20px rgba(74,21,34,.10)}
+  .mv-ph.noimg+.mv-sheet .mv-card{margin-top:14px}
+  .mv-cal{display:flex;align-items:baseline;gap:6px;justify-content:center;margin-bottom:8px}
+  .mv-cal b{font-family:var(--serif);font-weight:400;font-size:40px;letter-spacing:-.02em;line-height:1}
+  .mv-cal span{color:var(--muted);font-size:12px}
+  .mv-mac{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .mv-mac div{border-radius:12px;padding:7px 4px;text-align:center}
+  .mv-mac span{display:block;font-size:9.5px;letter-spacing:.04em;color:#7f6358;margin-bottom:1px}
+  .mv-mac b{font-size:14px;font-weight:600}
   .mv-mac .mp{background:#f3e0db} .mv-mac .mc2{background:#f4ead2} .mv-mac .mg{background:#e6e8d5}
   .cr,.ar{display:flex;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
   .th{position:relative;flex:none;width:56px;height:56px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -1395,13 +1397,13 @@ function renderDieta(){
   if(dieta.nota)h+=`<div class="card sand"><h3 style="margin-top:0;color:#6d6560">Um recado meu</h3><p>${esc(dieta.nota)}</p></div>`;
   const mi=Math.min(mealSel,dieta.meals.length-1),meal=dieta.meals[mi],its=itensEf(meal,mi),tt=totaisI(its);
   const trocada=its.some(i=>i.troca);
-  const fotoU=meal.foto||'';const foto=fotoU||(meal.prato&&!meal.reforco&&!trocada);
+  const fotoU=meal.foto||(!meal.reforco&&!trocada?fotoDe(meal):'');const foto=fotoU;
   h+=`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
-  h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="${fotoU||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
+  h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="${fotoU}" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
       <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
-    <div class="mv-sheet">
-      <div class="mv-cal"><b>${Math.round(tt.k)}</b><span>kcal</span></div>
-      <div class="mv-mac"><div class="mp"><span>Proteínas</span><b>${Math.round(tt.p)} g</b></div><div class="mc2"><span>Carboidratos</span><b>${Math.round(tt.c)} g</b></div><div class="mg"><span>Gorduras</span><b>${Math.round(tt.g)} g</b></div></div>
+    <div class="mv-sheet"><div class="mv-card">
+      <div class="mv-cal"><b>${Math.round(tt.k/10)*10}</b><span>kcal</span></div>
+      <div class="mv-mac"><div class="mp"><span>Proteínas</span><b>${Math.round(tt.p)} g</b></div><div class="mc2"><span>Carboidratos</span><b>${Math.round(tt.c)} g</b></div><div class="mg"><span>Gorduras</span><b>${Math.round(tt.g)} g</b></div></div></div>
       <h3>Composição</h3>
       ${its.map(it=>{const f=F[it.f];return `<div class="cr">${thumb(f)}<div class="cr-t"><b>${esc(f.n)}</b>${it.troca?'<em class="altb">alternativa escolhida</em>':''}<span>${it.g} g | ${curta(f,it.g)}</span></div></div>`;}).join('')}
       <div class="ptn">PTN = <b>${Math.round(tt.p)} g</b> &nbsp;·&nbsp; CHO = <b>${Math.round(tt.c)} g</b> &nbsp;·&nbsp; LIP = <b>${Math.round(tt.g)} g</b></div>
@@ -1853,7 +1855,7 @@ function renderAdmin(){
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
     h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
-      <div class="mcard-b"><div class="fotoup"><div class="mv-ph${(meal.foto||meal.prato)?'':' noimg'} fu-ph">${(meal.foto||meal.prato)?`<img src="${meal.foto||'imagens/refeicoes/'+meal.prato+'.jpg'}" alt="" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div><div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2></div>
+      <div class="mcard-b"><div class="fotoup"><div class="mv-ph${(meal.foto||fotoDe(meal))?'':' noimg'} fu-ph">${(meal.foto||fotoDe(meal))?`<img src="${meal.foto||fotoDe(meal)}" alt="" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div><div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2></div>
           <label class="fu-btn">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label></div>
         <div class="fu-n"><span>${meal.foto?'Foto anexada por você. É assim que a cliente vê.':'Esta é a área da foto, exatamente como a cliente vê, acima do texto da refeição.'}</span>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
       <input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="setMealCampo(${mi},'desc',this.value)" style="margin-top:8px">
@@ -1883,6 +1885,8 @@ function editQ(mi,ii,v){const me=dieta.meals[mi];me.editado=true;const it=me.ite
 let admAb=new Set([0]);
 function admToggle(mi,ab){if(ab)admAb.add(mi);else admAb.delete(mi);}
 /* Modo de preparo de uma refeição (dietas antigas da biblioteca guardavam o preparo em 'obs') */
+/* Foto da refeição: pratos padrão usam o id do prato; receitas da biblioteca usam a foto da receita-base (variantes não têm foto própria) */
+const fotoDe=me=>{if(me.prato)return 'imagens/refeicoes/'+me.prato+'.jpg';if(me.bibId){const b=BIB.find(x=>x.id===me.bibId);if(b&&!b.variante)return 'imagens/refeicoes/'+b.id.replace(/^lib-/,'')+'.jpg';}return '';};
 const prepDe=me=>me.preparo!==undefined?me.preparo:(me.bibId?(me.obs||''):'');
 const obsDe=me=>me.preparo===undefined&&me.bibId?'':(me.obs||'');
 function setMealCampo(mi,k,v){
