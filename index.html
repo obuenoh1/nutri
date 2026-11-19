@@ -1614,7 +1614,7 @@ async function entrarNutriNuvem(){
 }
 function entrouAdmin(){
   SNAP={dados,dieta,pesos,checks,trocas};
-  nutriMode=true;admView='clientes';tab('admin');
+  nutriMode=true;admView='clientes';bibCarregar();tab('admin');
 }
 function dialogoLogin(fn){
   const d=$('dlg'),e=$('dem'),i=$('dinp'),ok=$('dok'),no=$('dno');
@@ -1689,7 +1689,7 @@ function removerClienteNuvem(id){
 function restaurarDono_unused(){}
 function entrarNutri_placeholder(){}
 let admView='clientes';
-function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';renderAdmin()">Biblioteca</button></div>`;}
+function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';bibCarregar();renderAdmin()">Biblioteca</button></div>`;}
 const GRUPOS_AL=[['extra','Livre (só para incluir nas dietas)'],['carbo','Carboidrato'],['prot','Proteína'],['leg','Leguminosa'],['fruta','Fruta'],['veg','Vegetal'],['gord','Gordura boa'],['lat','Laticínio ou bebida']];
 const SECOES=['Hortifruti','Açougue','Laticínios','Mercearia','Outros'];
 function renderAdmAlimentos(){
