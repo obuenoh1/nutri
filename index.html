@@ -1234,7 +1234,7 @@ function gerarRefeicao(chave,tipo,pct,p,meta,usados){
   const m=MTAG[tipo];
   const bb=bibEscolher(chave,p,usados);
   if(bb){usados.add(bb.g);const b=bb.b;
-    return {nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,obs:b.obs||'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
+    return {nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,preparo:b.obs||'',obs:'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
   const lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
   let esc_,titulo,pratoId=null;
   if(lista.length){const e=escolherPadrao(lista,p.obj,tipo);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
@@ -1405,7 +1405,8 @@ function renderDieta(){
       <h3>Composição</h3>
       ${its.map(it=>{const f=F[it.f];return `<div class="cr">${thumb(f)}<div class="cr-t"><b>${esc(f.n)}</b>${it.troca?'<em class="altb">alternativa escolhida</em>':''}<span>${it.g} g | ${curta(f,it.g)}</span></div></div>`;}).join('')}
       <div class="ptn">PTN = <b>${Math.round(tt.p)} g</b> &nbsp;·&nbsp; CHO = <b>${Math.round(tt.c)} g</b> &nbsp;·&nbsp; LIP = <b>${Math.round(tt.g)} g</b></div>
-      ${meal.obs?`<div class="obs"><b>Observação</b><p>${esc(meal.obs)}</p></div>`:''}
+      ${prepDe(meal)?`<div class="obs"><b>Modo de preparo</b><p style="white-space:pre-line">${esc(prepDe(meal))}</p></div>`:''}
+      ${obsDe(meal)?`<div class="obs"><b>Observação</b><p>${esc(obsDe(meal))}</p></div>`:''}
       ${dados&&dados.caneta&&meal.notaCaneta?`<div class="obs"><b>Orientação</b><p>${esc(meal.notaCaneta)}</p></div>`:''}
       <h3>Alternativas</h3>
       <p class="sub" style="margin:-4px 0 10px">Opcionais. Escolha só se quiser trocar. Não é para comer junto com o alimento original.</p>
@@ -1413,7 +1414,7 @@ function renderDieta(){
         return `<details class="altd" ${cur?'open':''}><summary><span>Em vez de <b>${esc(f.n.toLowerCase())}</b></span><em>${subs.length}</em></summary>
           ${cur?`<button class="mini light" style="margin:8px 0" onclick="limparTroca(${mi},${i})">Voltar ao original</button>`:''}
           <div class="altl">${subs.map(o=>{const sel=cur&&cur.f===o.id;return `<div class="ar${sel?' on':''}" onclick="escolherTroca(${mi},${i},'${o.id}',${o.g})">${thumb(o.x)}<div class="cr-t"><b>${esc(o.x.n)}</b><span>${o.g} g | ${curta(o.x,o.g)}</span>${o.dif?`<small class="df">${o.dif}</small>`:''}</div><i class="pick">${sel?'Escolhida':'Escolher'}</i></div>`;}).join('')}</div></details>`;}).join('')}
-      <details class="prep"><summary>Como preparar</summary><ol>${[...new Set(meal.itens.map(i=>F[i.f].prep))].map(x=>`<li>${x}</li>`).join('')}</ol></details>
+      ${prepDe(meal)?'':`<details class="prep"><summary>Como preparar</summary><ol>${[...new Set(meal.itens.map(i=>F[i.f].prep))].map(x=>`<li>${x}</li>`).join('')}</ol></details>`}
       <div class="tip">${meal.dica}</div>
     </div></div>`;
   o.innerHTML=h;
@@ -1839,6 +1840,7 @@ function renderAdmin(){
   let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
    <div class="sub">${dados.sexo==='f'?'F':'M'}, ${dados.idade} anos, ${dados.peso} kg, ${dados.altura} cm · IMC ${br(m.imc)} · ${dados.refs} refeições · restrições: ${dados.restr.join(', ')||'nenhuma'}${dados.dislikes.length?' · não gosta: '+esc(dados.dislikes.join(', ')):''}</div>
    <div class="sub" style="margin-top:6px">Meta da cliente: ${dados.metaKg?`perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'sem meta em quilos'}</div>
+   <div class="sub" style="margin-top:6px"><button class="mini light" onclick="refazerBib()">Refazer a dieta com a biblioteca</button> (modelos com modo de preparo; descarta as edições desta dieta)</div>
    <div class="sub" style="margin-top:6px">Usa caneta emagrecedora: <b>${dados.caneta?'sim':'não'}</b>${dados.caneta?` (piso ${PISO(dados)} kcal · proteína ${CANETA.protGkg} g/kg · ajuste máx. ${CANETA.escalaMax}×)`:''} <button class="mini light" onclick="toggleCaneta()">${dados.caneta?'marcar que não usa':'marcar que usa'}</button></div>
    <div class="sub" style="margin-top:6px">Equação: <select onchange="setFormula(this.value)" style="width:auto;display:inline-block;padding:6px 10px"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática (Mifflin se emagrecer ou IMC 25+, senão OMS)</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS (FAO/WHO/UNU)</option></select></div>
    <div class="sub" style="margin-top:6px">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: TMB ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}</div>
@@ -1864,7 +1866,8 @@ function renderAdmin(){
     });
     h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
       <div class="row" style="margin-top:12px"><button class="mini" onclick="bibPainel(${mi})">Trocar por uma da biblioteca</button><button class="mini light" onclick="bibSalvar(${mi})">Salvar esta na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="mini light" onclick="bibAtualizarDe(${mi})">Atualizar o modelo base com estas quantidades</button>`:''}</div><div id="bib${mi}"></div>
-      <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(meal.obs||'')}</textarea></div></details>`;
+      <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
+      <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(obsDe(meal))}</textarea></div></details>`;
   });
   h+=`<div class="card"><label style="margin-top:0">Recado para a cliente (opcional)</label><textarea id="nota" onchange="dieta.nota=this.value;save('dieta',dieta)">${esc(dieta.nota||'')}</textarea>
    <button class="full" onclick="aprovar()">${dieta.status==='aprovada'?'Atualizar dieta aprovada':'Aprovar e liberar'}</button>
@@ -1879,9 +1882,13 @@ function renderAdmin(){
 function editQ(mi,ii,v){const me=dieta.meals[mi];me.editado=true;const it=me.itens[ii],f=F[it.f],antes=Math.round(it.g);it.g=Math.round(Math.max(f.st,num(v)||f.st)*f.u.g);save('dieta',dieta);logH('edicao',me.nome+': '+f.n+' '+antes+' g → '+Math.round(it.g)+' g');renderAdmin();}
 let admAb=new Set([0]);
 function admToggle(mi,ab){if(ab)admAb.add(mi);else admAb.delete(mi);}
+/* Modo de preparo de uma refeição (dietas antigas da biblioteca guardavam o preparo em 'obs') */
+const prepDe=me=>me.preparo!==undefined?me.preparo:(me.bibId?(me.obs||''):'');
+const obsDe=me=>me.preparo===undefined&&me.bibId?'':(me.obs||'');
 function setMealCampo(mi,k,v){
   const me=dieta.meals[mi];me[k]=v;save('dieta',dieta);
   if(k==='obs')logH('edicao',me.nome+': observação '+(v?'atualizada':'removida'));
+  if(k==='preparo')logH('edicao',me.nome+': modo de preparo '+(v?'atualizado':'removido'));
   if(k==='hora')logH('edicao',me.nome+': horário '+(v||'removido'));
   if(k==='titulo'||k==='desc')logH('edicao',me.nome+': '+(k==='titulo'?'título':'descrição')+' alterado');
   if(k==='hora'||k==='titulo')renderAdmin();
@@ -1924,7 +1931,7 @@ async function bibSalvar(mi){
   const me=dieta.meals[mi];if(!me.itens.length){alert('Esta refeição está sem alimentos.');return;}
   const ids=new Set(me.itens.map(i=>i.f));
   const e={id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome:me.titulo,tipo:me.nome,criado:iso(),
-    titulo:me.titulo,desc:me.desc||'',obs:me.obs||'',foto:me.foto||'',prato:me.prato||'',notaCaneta:me.notaCaneta||'',
+    titulo:me.titulo,desc:me.desc||'',obs:prepDe(me)||me.obs||'',foto:me.foto||'',prato:me.prato||'',notaCaneta:me.notaCaneta||'',
     itens:me.itens.map(i=>({f:i.f,g:Math.round(i.g)})),extras:EXTRAS.filter(f=>ids.has(f.id))};
   BIB.unshift(e);save('biblioteca',BIB);
   if(NUVEM){const {id,nome,tipo,criado,...dados}=e;const r=await sbA.from('biblioteca').upsert({id,nome,tipo,criado,dados});if(r.error){aviso('Salva só neste aparelho: '+r.error.message);return;}}
@@ -1946,9 +1953,9 @@ function bibAplicar(mi,id){
   ask('Trocar "'+me.titulo+'" por "'+b.nome+'"? Os alimentos e quantidades desta refeição serão substituídos (o horário continua).',()=>{
     (b.extras||[]).forEach(f=>{if(!F[f.id]){FOODS.push(f);F[f.id]=f;EXTRAS.push(f);}});save('extras',EXTRAS);
     const itens=b.itens.filter(i=>F[i.f]);
-    me.itens=itens.map(i=>({f:i.f,g:i.g}));me.titulo=b.titulo;me.desc=b.desc;me.obs=b.obs;
+    me.itens=itens.map(i=>({f:i.f,g:i.g}));me.titulo=b.titulo;me.desc=b.desc;
     if(b.foto)me.foto=b.foto;else delete me.foto;
-    me.prato=b.prato||undefined;me.notaCaneta=b.notaCaneta||'';me.bibId=b.id;me.editado=true;
+    me.prato=b.prato||undefined;me.notaCaneta=b.notaCaneta||'';me.preparo=b.obs||'';me.obs='';me.bibId=b.id;me.editado=true;
     save('dieta',dieta);admAb.add(mi);logH('edicao',me.nome+': trocou pela refeição "'+b.nome+'" da biblioteca');renderAdmin();});
 }
 async function bibRemover(id){
@@ -2063,6 +2070,13 @@ function salvarAlim(mi){
   FOODS.push(f);F[f.id]=f;EXTRAS.push(f);save('extras',EXTRAS);addAlim(mi,'f',f.id);
 }
 function addItem(mi){dieta.meals[mi].editado=true;const id=$('add'+mi).value;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);renderAdmin();}
+async function refazerBib(){
+  if(!BIB.length)await bibCarregar();
+  if(!BIB.length){aviso('A biblioteca ainda não carregou. Abra a aba Biblioteca e tente de novo.');return;}
+  ask('Refazer a dieta desta cliente com os modelos da biblioteca? As edições feitas nesta dieta serão descartadas.',()=>{
+    const nova=gerarDieta(dados);if(nova.fonte!=='biblioteca'){aviso('Não achei modelos da biblioteca que sirvam a esta cliente.');return;}
+    dieta=nova;dieta.status='pendente';save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;logH('edicao','Dieta refeita com os modelos da biblioteca.');renderAdmin();});
+}
 async function toggleCaneta(){
   dados.caneta=!dados.caneta;save('dados',dados);
   if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
