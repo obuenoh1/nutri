@@ -1102,7 +1102,11 @@ function elegiveis(grp,m,p,sub){return FOODS.filter(f=>f.grp===grp&&(!f.m||!m||f
 /* 1 kg de gordura corporal ≈ 7.110 kcal (1 kg em 30 dias = 237 kcal por dia) */
 const KCAL_KG=7110;
 function imcDe(p){return p.peso/Math.pow(p.altura/100,2);}
-const PISO=p=>p.sexo==='m'?1500:1200;
+/* Regras para quem usa caneta emagrecedora (ajuste aqui os números): a saciedade limita o quanto a pessoa consegue comer,
+   então o piso de calorias é menor, a proteína tem prioridade e as porções dos modelos mudam pouco. */
+const CANETA={pisoF:1000,pisoM:1200,protGkg:1.4,protMaxPct:.40,escalaMax:1.5,escalaProt:1.8,pesoProt:4,
+  dist:{6:[.20,.10,.25,.15,.20,.10],5:[.22,.10,.28,.15,.25]}};
+const PISO=p=>p.caneta?(p.sexo==='m'?CANETA.pisoM:CANETA.pisoF):(p.sexo==='m'?1500:1200);
 function baseEnergia(p){
   const imc=imcDe(p), mifflin=p.formula==='mifflin'||(p.formula!=='oms'&&(p.obj==='emagrecer'||imc>=25));
   let tmb,fa,metodo;
@@ -1123,7 +1127,7 @@ function metas(p){
   let kcal=b.get+delta;
   const bloq=p.obj==='emagrecer'&&kcal<PISO(p);
   if(bloq)kcal=PISO(p);
-  const prot=Math.round(Math.min(p.peso*(p.obj==='manter'?1.2:1.8),kcal*.35/4)), gord=Math.round(kcal*.27/9);
+  const prot=p.caneta?Math.round(Math.min(p.peso*CANETA.protGkg,kcal*CANETA.protMaxPct/4)):Math.round(Math.min(p.peso*(p.obj==='manter'?1.2:1.8),kcal*.35/4)), gord=Math.round(kcal*.27/9);
   return {kcal,prot,gord,carb:Math.round((kcal-prot*4-gord*9)/4),tmb:b.tmb,get:b.get,metodo:b.metodo,imc:b.imc,delta,fa:b.fa,
     semanal:r1(delta*7/KCAL_KG),bloq,gkg:r1(prot/p.peso)};
 }
@@ -1146,6 +1150,7 @@ const DIST={
  5:[['cafe','cafe',.22],['lanchem','lanche',.1],['almoco','almoco',.3],['lanche','lanche',.13],['jantar','jantar',.25]],
  6:[['cafe','cafe',.2],['lanchem','lanche',.1],['almoco','almoco',.28],['lanche','lanche',.12],['jantar','jantar',.22],['ceia','ceia',.08]]
 };
+const distDe=p=>{const d=DIST[p.refs];const c=p.caneta&&CANETA.dist[p.refs];return c?d.map((x,i)=>[x[0],x[1],c[i]]):d;};
 const MTAG={cafe:'cafe',lanche:'lanche',almoco:'prato',jantar:'prato',ceia:'ceia'};
 const CAP={prot:180,carbo:240,fruta:180,gord:40,lat:340,rec:200};
 const pickOf=a=>a[Math.floor(Math.random()*a.length)];
@@ -1213,8 +1218,23 @@ function tituloItens(itens){
   const t=nomes.length>1?nomes.slice(0,-1).join(', ')+' e '+nomes[nomes.length-1]:nomes[0]||'';
   return t.charAt(0).toUpperCase()+t.slice(1);
 }
+const NOME_REF={cafe:'Café da manhã',lanchem:'Lanche da manhã',almoco:'Almoço',lanche:'Lanche da tarde',jantar:'Jantar',ceia:'Ceia'};
+/* Modelos da biblioteca que servem a esta cliente: perfil (caneta ou normal), restrições e o que ela não come. */
+function bibEscolher(chave,p,usados){
+  if(typeof BIB==='undefined'||!BIB.length)return null;
+  const rs=restricoes(p),vg=rs.includes('vegan')?'vegana':rs.includes('veg')?'vegetariana':null,perfil=p.caneta?'caneta':'normal',dl=(p.dislikes||[]).filter(Boolean);
+  const ok=b=>b.tipo===NOME_REF[chave]&&(b.perfil||[]).includes(perfil)&&!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg))
+    &&b.itens.every(i=>F[i.f])&&!usados.has(b.grupo||b.id)&&!dl.some(d=>semAc(b.nome+' '+b.itens.map(i=>F[i.f].n).join(' ')).includes(semAc(d)));
+  const l=BIB.filter(ok);if(!l.length)return null;
+  const gr={};l.forEach(b=>(gr[b.grupo||b.id]=gr[b.grupo||b.id]||[]).push(b));
+  const g=pickOf(Object.keys(gr));const v=gr[g];
+  return {b:v.find(x=>!x.variante)||v[0],g};
+}
 function gerarRefeicao(chave,tipo,pct,p,meta,usados){
   const m=MTAG[tipo];
+  const bb=bibEscolher(chave,p,usados);
+  if(bb){usados.add(bb.g);const b=bb.b;
+    return {nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,obs:b.obs||'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
   const lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
   let esc_,titulo,pratoId=null;
   if(lista.length){const e=escolherPadrao(lista,p.obj,tipo);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
@@ -1238,10 +1258,10 @@ function gerarRefeicao(chave,tipo,pct,p,meta,usados){
 /* Balanceamento final: ajusta as quantidades, de uma medida caseira por vez, até o dia chegar o mais perto
    possível das metas de calorias, proteína, carboidrato e gordura, mantendo a divisão entre as refeições. */
 function balancear(d,p){
-  const m=d.meta,pcts=DIST[p.refs].map(x=>x[2]);
+  const m=d.meta,pcts=distDe(p).map(x=>x[2]);
   const dat=d.meals.map((me,mi)=>me.itens.map(it=>{
     const f=F[it.f],g0=it.g,stp=f.st*f.u.g;
-    let lo=Math.max(stp,g0*.5),hi=g0*3.4;
+    let lo=Math.max(stp,g0*.5),hi=g0*(p.caneta?(f.grp==='prot'?CANETA.escalaProt:CANETA.escalaMax):3.4);
     if(f.grp==='veg'){lo=Math.max(stp,g0*.7);hi=g0*1.8;}
     const cap=it.f==='ovo'?200:(me.tipo==='cafe'&&f.grp==='prot'?150:({prot:220,carbo:320,fruta:220,gord:50,lat:400}[f.grp]||999));
     hi=Math.max(g0,Math.min(hi,cap));lo=Math.min(lo,g0);
@@ -1251,7 +1271,7 @@ function balancear(d,p){
     dat.forEach((arr,mi)=>{let k=0;arr.forEach(x=>{const q=x.it.g/100;k+=x.f.k*q;t.p+=x.f.p*q;t.c+=x.f.c*q;t.g+=x.f.g*q;});t.k+=k;mk.push(k);});
     return {t,mk};};
   const custo=()=>{const {t,mk}=calc();
-    let c=4*((t.k-m.kcal)/m.kcal)**2+2.5*((t.p-m.prot)/m.prot)**2+1.5*((t.c-m.carb)/m.carb)**2+1.5*((t.g-m.gord)/m.gord)**2;
+    let c=4*((t.k-m.kcal)/m.kcal)**2+(p.caneta?CANETA.pesoProt:2.5)*((t.p-m.prot)/m.prot)**2+1.5*((t.c-m.carb)/m.carb)**2+1.5*((t.g-m.gord)/m.gord)**2;
     mk.forEach((k,i)=>{const al=pcts[i]*m.kcal;c+=.4*((k-al)/al)**2;});
     return c;};
   let atual=custo();
@@ -1281,8 +1301,9 @@ function reforcar(d,p){
 }
 function gerarDieta(p){
   const meta=metas(p),usados=new Set();
-  const d={status:'pendente',geradaEm:hoje(),meta,nota:'',meals:DIST[p.refs].map(([c,t,pc])=>gerarRefeicao(c,t,pc,p,meta,usados))};
+  const d={status:'pendente',geradaEm:hoje(),meta,nota:'',meals:distDe(p).map(([c,t,pc])=>gerarRefeicao(c,t,pc,p,meta,usados))};
   if(p.obj==='ganhar')reforcar(d,p);
+  d.fonte=d.meals.some(m=>m.bibId)?'biblioteca':'padrao';
   return balancear(d,p);
 }
 
@@ -1674,7 +1695,11 @@ async function abrirClienteNuvem(id){
     dados=r.dados;dados.id=r.id;dados.dadosEm=r.dados_em;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;
     EV_ATUAL=ev.data||[];
     const velho=p.data&&p.data.base&&new Date(p.data.base)<new Date(r.dados_em);
-    if(p.data&&!velho){dieta=p.data.dieta;dieta.status=p.data.status;}
+    if(!BIB.length)await bibCarregar();
+    if(p.data&&!velho){dieta=p.data.dieta;dieta.status=p.data.status;
+      if(dieta.status!=='aprovada'&&dieta.fonte!=='biblioteca'&&BIB.length&&!dieta.meals.some(m=>m.editado)){
+        const nova=gerarDieta(dados);if(nova.fonte==='biblioteca'){dieta=nova;dieta.status='pendente';planoPushAgora();
+          const e={cliente_id:id,quem:'nutri',tipo:'dieta',txt:'Dieta refeita com os modelos da biblioteca.',t:iso()};EV_ATUAL.unshift(e);sbA.from('eventos').insert(e);}}}
     else{dieta=gerarDieta(dados);dieta.status='pendente';planoPushAgora();
       const e={cliente_id:id,quem:'nutri',tipo:'dieta',txt:velho?'Dados novos da cliente: nova sugestão de dieta gerada.':'Sugestão de dieta gerada para revisão.',t:iso()};EV_ATUAL.unshift(e);sbA.from('eventos').insert(e);}
     admAb=new Set([0]);admView='dieta';renderAdmin();window.scrollTo(0,0);
@@ -1814,7 +1839,7 @@ function renderAdmin(){
   let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
    <div class="sub">${dados.sexo==='f'?'F':'M'}, ${dados.idade} anos, ${dados.peso} kg, ${dados.altura} cm · IMC ${br(m.imc)} · ${dados.refs} refeições · restrições: ${dados.restr.join(', ')||'nenhuma'}${dados.dislikes.length?' · não gosta: '+esc(dados.dislikes.join(', ')):''}</div>
    <div class="sub" style="margin-top:6px">Meta da cliente: ${dados.metaKg?`perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'sem meta em quilos'}</div>
-   <div class="sub" style="margin-top:6px">Usa caneta emagrecedora: <b>${dados.caneta?'sim':'não'}</b> <button class="mini light" onclick="toggleCaneta()">${dados.caneta?'marcar que não usa':'marcar que usa'}</button></div>
+   <div class="sub" style="margin-top:6px">Usa caneta emagrecedora: <b>${dados.caneta?'sim':'não'}</b>${dados.caneta?` (piso ${PISO(dados)} kcal · proteína ${CANETA.protGkg} g/kg · ajuste máx. ${CANETA.escalaMax}×)`:''} <button class="mini light" onclick="toggleCaneta()">${dados.caneta?'marcar que não usa':'marcar que usa'}</button></div>
    <div class="sub" style="margin-top:6px">Equação: <select onchange="setFormula(this.value)" style="width:auto;display:inline-block;padding:6px 10px"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática (Mifflin se emagrecer ou IMC 25+, senão OMS)</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS (FAO/WHO/UNU)</option></select></div>
    <div class="sub" style="margin-top:6px">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: TMB ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}</div>
    <div class="sub" style="margin-top:6px">Objetivo: ${dados.obj==='emagrecer'?'emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'ganhar massa, superávit de '+dados.ajuste+' kcal':'manter'} · Método: ${m.metodo} · gasto basal ${m.tmb} kcal · gasto total ${m.get} kcal</div>
@@ -1887,7 +1912,7 @@ function removerFoto(mi){const me=dieta.meals[mi];delete me.foto;save('dieta',di
 
 /* ===== Biblioteca de refeições ===== */
 let BIB=load('biblioteca',[]);
-function bibReg(b){(b.extras||[]).forEach(f=>{if(!F[f.id]){FOODS.push(f);F[f.id]=f;}});}
+function bibReg(b){(b.extras||[]).forEach(f=>{if(f.u&&f.u.g>=60&&f.st>.5)f.st=.5;if(!F[f.id]){FOODS.push(f);F[f.id]=f;}});}
 BIB.forEach(bibReg);
 async function bibCarregar(){
   if(!NUVEM)return;
@@ -1912,7 +1937,7 @@ function bibPainel(mi){
 function bibLista(mi){
   const me=dieta.meals[mi],q=semAc($('bq'+mi).value.trim()),o=$('bl'+mi);
   const rs=restricoes(dados||{}),vg=rs.includes('vegan')?'vegana':rs.includes('veg')?'vegetariana':null;
-  const serve=b=>!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||!(b.dieta_tipo||[]).length||b.dieta_tipo.includes(vg));
+  const serve=b=>!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg));
   const l=BIB.filter(b=>serve(b)&&(!q||semAc(b.nome+' '+b.tipo).includes(q))).sort((a,b)=>(b.tipo===me.nome)-(a.tipo===me.nome));
   o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)} · ${Math.round(t.k)} kcal · PTN ${Math.round(t.p)} · CHO ${Math.round(t.c)} · LIP ${Math.round(t.g)}</small></span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
 }
@@ -2042,6 +2067,7 @@ async function toggleCaneta(){
   dados.caneta=!dados.caneta;save('dados',dados);
   if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
   logH('edicao','Uso de caneta emagrecedora: '+(dados.caneta?'sim':'não'));renderAdmin();
+  ask('Refazer a dieta com as regras '+(dados.caneta?'da caneta (menos calorias, proteína em primeiro lugar, porções menores)':'do plano comum')+'? As edições feitas nesta dieta serão descartadas.',()=>{dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;logH('edicao','Dieta refeita com as regras '+(dados.caneta?'da caneta':'do plano comum')+'.');renderAdmin();});
 }
 function setFormula(v){
   if(!window._ok4){ask('Trocar a equação recalcula as metas e gera a dieta de novo, descartando edições. Continuar?',()=>{window._ok4=1;setFormula(v);window._ok4=0},()=>renderAdmin());return;}
