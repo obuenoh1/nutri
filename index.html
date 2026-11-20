@@ -1868,7 +1868,7 @@ function renderAdmin(){
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
       h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><span>${Math.round(k)} kcal · PTN ${r1(pp)} · CHO ${r1(cc)} · LIP ${r1(gg)}</span></div>
         <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span></div>
-        <button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div>`;
+        <button class="mini" onclick="trocarItem(${mi},${ii})">trocar</button><button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
       <div class="row" style="margin-top:12px"><button class="mini" onclick="bibPainel(${mi})">Trocar por uma da biblioteca</button><button class="mini light" onclick="removerRefeicao(${mi})">Remover esta refeição</button><button class="mini light" onclick="bibSalvar(${mi})">Salvar esta na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="mini light" onclick="bibAtualizarDe(${mi})">Atualizar o modelo base com estas quantidades</button>`:''}</div><div id="bib${mi}"></div>
@@ -1999,14 +1999,35 @@ async function bibSalvar(mi){
 }
 function bibPainel(mi){
   const o=$('bib'+mi);if(o.innerHTML){o.innerHTML='';return;}
-  o.innerHTML=`<div class="nfbox"><input id="bq${mi}" placeholder="Buscar na biblioteca" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="res" style="display:block"></div></div>`;bibLista(mi);
+  o.innerHTML=`<div class="nfbox"><input id="bq${mi}" placeholder="Buscar por nome ou alimento, ex.: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="res" style="display:block"></div></div>`;bibLista(mi);
 }
 function bibLista(mi){
   const me=dieta.meals[mi],q=semAc($('bq'+mi).value.trim()),o=$('bl'+mi);
   const rs=restricoes(dados||{}),vg=rs.includes('vegan')?'vegana':rs.includes('veg')?'vegetariana':null;
   const serve=b=>!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg));
-  const l=BIB.filter(b=>serve(b)&&(!q||semAc(b.nome+' '+b.tipo).includes(q))).sort((a,b)=>(b.tipo===me.nome)-(a.tipo===me.nome));
-  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)} · ${Math.round(t.k)} kcal · PTN ${Math.round(t.p)} · CHO ${Math.round(t.c)} · LIP ${Math.round(t.g)}</small></span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
+  const ws=q.split(/[\s,]+/).filter(Boolean),nomesDe=b=>b.itens.map(i=>(F[i.f]||(b.extras||[]).find(x=>x.id===i.f)||{}).n||'').filter(Boolean);
+  const l=BIB.filter(b=>serve(b)&&(!ws.length||ws.every(w=>semAc(b.nome+' '+b.tipo+' '+nomesDe(b).join(' ')).includes(w)))).sort((a,b)=>(b.tipo===me.nome)-(a.tipo===me.nome));
+  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)} · ${Math.round(t.k)} kcal · PTN ${Math.round(t.p)} · CHO ${Math.round(t.c)} · LIP ${Math.round(t.g)}</small>${ws.length&&!ws.every(w=>semAc(b.nome).includes(w))?`<small>com ${esc(nomesDe(b).filter(n=>ws.some(w=>semAc(n).includes(w))).join(', '))}</small>`:''}</span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
+}
+
+/* ===== Trocar um alimento dentro da refeição (vale só para esta dieta) ===== */
+function trocarItem(mi,ii){
+  const o=$('ti'+mi+'_'+ii);if(o.innerHTML){o.innerHTML='';return;}
+  o.innerHTML=`<div class="nfbox"><input id="tq${mi}_${ii}" placeholder="Filtrar as opções de troca" oninput="trocaLista(${mi},${ii})" autocomplete="off"><div id="tl${mi}_${ii}" class="res" style="display:block"></div></div>`;trocaLista(mi,ii);
+}
+function trocaLista(mi,ii){
+  const me=dieta.meals[mi],it=me.itens[ii],q=semAc($('tq'+mi+'_'+ii).value.trim()),ws=q.split(/[\s,]+/).filter(Boolean),o=$('tl'+mi+'_'+ii);
+  const subs=substituicoes(it,me.tipo,dados).filter(x=>!ws.length||ws.every(w=>semAc(x.x.n).includes(w)));
+  o.innerHTML=subs.length?subs.map(x=>`<button class="resb" onclick="aplicarTroca(${mi},${ii},'${x.id}',${x.g})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]} · ${x.k} kcal${x.dif?' · '+x.dif:''}</small></span></button>`).join(''):`<div class="sub" style="padding:8px">Nenhuma opção de troca${ws.length?' com essa palavra':' para este alimento'}. Para um alimento fora da lista, use "Buscar alimento para adicionar" e depois remova o outro.</div>`;
+}
+function aplicarTroca(mi,ii,id,g){
+  const me=dieta.meals[mi],it=me.itens[ii],velho=F[it.f],novo=F[id];if(!novo)return;
+  const pri=n=>n.split(' ')[0].toLowerCase();
+  let tit=me.titulo,mudou=false;const a=pri(velho.n),b=pri(novo.n);
+  if(a.length>2&&tit.toLowerCase().includes(a)){tit=tit.replace(new RegExp(a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),m=>m[0]===m[0].toUpperCase()?b[0].toUpperCase()+b.slice(1):b);mudou=true;}
+  it.f=id;it.g=g;me.titulo=tit;me.editado=true;
+  save('dieta',dieta);admAb.add(mi);logH('edicao',me.nome+': trocou '+velho.n+' por '+novo.n+' ('+g+' g)');renderAdmin();
+  if(!mudou)aviso('Troquei '+velho.n+' por '+novo.n+'. Confira se o título e o modo de preparo desta refeição ainda fazem sentido.');
 }
 function bibAplicar(mi,id){
   const b=BIB.find(x=>x.id===id);if(!b)return;const me=dieta.meals[mi];
