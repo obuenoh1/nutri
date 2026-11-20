@@ -1924,7 +1924,7 @@ function renderAdmin(){
         <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii},this)">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi},this)">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi},this)">Alterar a refeição</button><button class="act" onclick="menuBib(${mi},this)">Biblioteca ▾</button><button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
 </div></details>`;
   });
@@ -2049,6 +2049,10 @@ async function bibSalvar(mi){
   BIB.unshift(e);save('biblioteca',BIB);
   if(NUVEM){const {id,nome,tipo,criado,...dados}=e;const r=await sbA.from('biblioteca').upsert({id,nome,tipo,criado,dados});if(r.error){aviso('Salva só neste aparelho: '+r.error.message);return;}}
   logH('edicao',me.nome+': salvou "'+e.nome+'" na biblioteca');aviso('Refeição salva na biblioteca.');
+}
+function menuBib(mi,btn){
+  const me=dieta.meals[mi],tem=me.bibId&&BIB.some(b=>b.id===me.bibId);
+  popAbrir(btn,`<div class="pop-l"><button class="pop-i" onclick="popFechar();bibSalvar(${mi})"><span><b>Guardar como nova receita</b><small>Cria uma receita nova na biblioteca com o que você editou aqui. A original não muda.</small></span></button>${tem?`<button class="pop-i" onclick="popFechar();bibAtualizarDe(${mi})"><span><b>Atualizar a receita original</b><small>Troca as quantidades da receita original da biblioteca pelas que estão aqui. Vale para as próximas pacientes.</small></span></button>`:''}</div>`);
 }
 function bibPainel(mi,btn){
   popAbrir(btn,`<input id="bq${mi}" placeholder="Buscar: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="pop-l"></div>`);
