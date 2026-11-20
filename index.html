@@ -690,6 +690,28 @@
 .resb:hover{border-color:#d9b9b4;box-shadow:0 6px 16px rgba(74,21,34,.09);transform:translateY(-1px)}
 .res .resb b{font-size:14px}
 .res .resb{width:100%;margin-bottom:6px;text-align:left}
+
+/* ===== Revisão mais enxuta ===== */
+.il{display:grid!important;grid-template-columns:1fr auto;gap:2px 10px!important;padding:11px 13px!important;align-items:start}
+.il-n{min-width:0}.il-n b{font-size:14.5px}.il-n .ms{display:block;font-style:normal;font-size:12px;color:#a0948a;margin-top:1px}
+.il .mcp{margin-top:0}.il-p{padding-top:2px}.il button{min-height:0!important}.il .stp button{width:26px!important;height:26px!important}.il{row-gap:0!important}.mcp i{font-size:10.5px;padding:2px 8px;letter-spacing:.01em}
+.il-q{display:contents}.il-n{grid-column:1;grid-row:1}.il-p{grid-column:1;grid-row:2}.il .stp{grid-column:2;grid-row:1;justify-self:end}.il-a{grid-column:2;grid-row:2;justify-self:end;align-self:center}
+.il-q .stp{padding:2px;gap:0}.il-q .stp button{width:26px;height:26px;font-size:16px}.il-q .stp .qi{width:42px;font-size:13.5px}.il-q .un{display:none}
+.il-a{margin:0;gap:2px}.ib{padding:4px 9px;font-size:12px;background:transparent;color:#713C43}.ib:hover{background:#f1e6e3}
+/* seletor estilo iPhone */
+.pk{background:#f6f0e6;border-radius:16px;padding:10px 12px 12px;margin-top:8px}
+.pk-w{position:relative;height:176px}
+.pk-band{position:absolute;left:0;right:0;top:66px;height:44px;border-radius:12px;background:rgba(113,60,67,.08);pointer-events:none}
+.pk-l{height:176px;overflow-y:auto;scroll-snap-type:y mandatory;padding:66px 0;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);scrollbar-width:none}
+.pk-l::-webkit-scrollbar{display:none}
+.pk-i{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:16px;color:#a8998f;cursor:pointer;transition:color .15s,font-size .15s}
+.pk-i.on{color:#3f2227;font-weight:600;font-size:18px}
+.pk-d{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px;min-height:58px}.pk-d .mcp{margin:0;justify-content:center}.pk-q{font-size:12.5px;color:#8d7569;text-align:center}
+.pk-b{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+/* tema mais claro */
+body.claro{background:#fbf8f4!important;--card:#ffffff;--field:#f6f1ea;--line:#eee7dc}
+body.claro .card,body.claro .mcard,body.claro .il{background:#fff}
+body.claro .mcard,body.claro .card{box-shadow:0 1px 3px rgba(74,21,34,.05)}
 </style>
 </head>
 <body>
@@ -1128,7 +1150,7 @@ const KCAL_KG=7110;
 function imcDe(p){return p.peso/Math.pow(p.altura/100,2);}
 /* Regras para quem usa caneta emagrecedora (ajuste aqui os números): a saciedade limita o quanto a pessoa consegue comer,
    então o piso de calorias é menor, a proteína tem prioridade e as porções dos modelos mudam pouco. */
-const CANETA={pisoF:1000,pisoM:1200,protGkg:1.4,protMaxPct:.40,escalaMax:1.5,escalaProt:1.8,pesoProt:4,
+const CANETA={carbMin:100,protMinGkg:1.2,pisoF:1000,pisoM:1200,protGkg:1.4,protMaxPct:.40,escalaMax:1.5,escalaProt:2.6,pesoProt:9,
   dist:{6:[.20,.10,.25,.15,.20,.10],5:[.22,.10,.28,.15,.25]}};
 const PISO=p=>p.caneta?(p.sexo==='m'?CANETA.pisoM:CANETA.pisoF):(p.sexo==='m'?1500:1200);
 function baseEnergia(p){
@@ -1151,7 +1173,11 @@ function metas(p){
   let kcal=b.get+delta;
   const bloq=p.obj==='emagrecer'&&kcal<PISO(p);
   if(bloq)kcal=PISO(p);
-  const prot=p.caneta?Math.round(Math.min(p.peso*CANETA.protGkg,kcal*CANETA.protMaxPct/4)):Math.round(Math.min(p.peso*(p.obj==='manter'?1.2:1.8),kcal*.35/4)), gord=Math.round(kcal*.27/9);
+  let prot=p.caneta?Math.round(Math.min(p.peso*CANETA.protGkg,kcal*CANETA.protMaxPct/4)):Math.round(Math.min(p.peso*(p.obj==='manter'?1.2:1.8),kcal*.35/4));const gord=Math.round(kcal*.27/9);
+  if(p.caneta){ /* caneta: proteína em primeiro lugar, mas sem deixar o carboidrato baixo demais (piso de 100 g ou 33% das calorias) */
+    const cm=Math.max(CANETA.carbMin,Math.round(kcal*.33/4));
+    if((kcal-prot*4-gord*9)/4<cm)prot=Math.max(Math.round(p.peso*CANETA.protMinGkg),Math.round((kcal-cm*4-gord*9)/4));
+  }
   return {kcal,prot,gord,carb:Math.round((kcal-prot*4-gord*9)/4),tmb:b.tmb,get:b.get,metodo:b.metodo,imc:b.imc,delta,fa:b.fa,
     semanal:r1(delta*7/KCAL_KG),bloq,gkg:r1(prot/p.peso)};
 }
@@ -1297,7 +1323,7 @@ function balancear(d,p){
     dat.forEach((arr,mi)=>{let k=0;arr.forEach(x=>{const q=x.it.g/100;k+=x.f.k*q;t.p+=x.f.p*q;t.c+=x.f.c*q;t.g+=x.f.g*q;});t.k+=k;mk.push(k);});
     return {t,mk};};
   const custo=()=>{const {t,mk}=calc();
-    let c=4*((t.k-m.kcal)/m.kcal)**2+(p.caneta?CANETA.pesoProt:2.5)*((t.p-m.prot)/m.prot)**2+1.5*((t.c-m.carb)/m.carb)**2+1.5*((t.g-m.gord)/m.gord)**2;
+    let c=(p.caneta?8:4)*((t.k-m.kcal)/m.kcal)**2+(p.caneta?CANETA.pesoProt:2.5)*((t.p-m.prot)/m.prot)**2+1.5*((t.c-m.carb)/m.carb)**2+1.5*((t.g-m.gord)/m.gord)**2;
     mk.forEach((k,i)=>{const al=pcts[i]*m.kcal;c+=.4*((k-al)/al)**2;});
     return c;};
   let atual=custo();
@@ -1743,7 +1769,9 @@ function removerClienteNuvem(id){
 function restaurarDono_unused(){}
 function entrarNutri_placeholder(){}
 let admView='clientes';
-function admNav(){return `<div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';bibCarregar();renderAdmin()">Biblioteca</button><button class="${admView==='modelos'?'on':''}" onclick="admView='modelos';(BIB.length?Promise.resolve():bibCarregar()).then(renderAdmin);renderAdmin()">Modelos</button></div>`;}
+function toggleTema(){const on=document.body.classList.toggle('claro');try{localStorage.setItem('tema',on?'claro':'')}catch(e){}renderAdmin();}
+try{if(localStorage.getItem('tema')==='claro')document.body.classList.add('claro');}catch(e){}
+function admNav(){return `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="mini light" onclick="toggleTema()">${document.body.classList.contains('claro')?'Tema padrão':'Tema mais claro'}</button></div><div class="seg" style="margin-bottom:12px"><button class="${admView==='clientes'?'on':''}" onclick="admView='clientes';renderAdmin()">Clientes</button><button class="${admView==='dieta'?'on':''}" onclick="admView='dieta';renderAdmin()">Revisão</button><button class="${admView==='alimentos'?'on':''}" onclick="admView='alimentos';renderAdmin()">Alimentos</button><button class="${admView==='biblioteca'?'on':''}" onclick="admView='biblioteca';bibCarregar();renderAdmin()">Biblioteca</button><button class="${admView==='modelos'?'on':''}" onclick="admView='modelos';(BIB.length?Promise.resolve():bibCarregar()).then(renderAdmin);renderAdmin()">Modelos</button></div>`;}
 const GRUPOS_AL=[['extra','Livre (só para incluir nas dietas)'],['carbo','Carboidrato'],['prot','Proteína'],['leg','Leguminosa'],['fruta','Fruta'],['veg','Vegetal'],['gord','Gordura boa'],['lat','Laticínio ou bebida']];
 const SECOES=['Hortifruti','Açougue','Laticínios','Mercearia','Outros'];
 function renderAdmAlimentos(){
@@ -1883,18 +1911,17 @@ function renderAdmin(){
     h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
       <div class="mcard-b"><div class="fotoup"><div class="mv-ph${(meal.foto||fotoDe(meal))?'':' noimg'} fu-ph">${(meal.foto||fotoDe(meal))?`<img src="${meal.foto||fotoDe(meal)}" alt="" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div><div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2></div>
           <label class="fu-btn">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label></div>
-        <div class="fu-n"><span>${meal.foto?'Foto anexada por você. É assim que a cliente vê.':'Esta é a área da foto, exatamente como a cliente vê, acima do texto da refeição.'}</span>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><div class="row2"><div><label>Horário</label><input type="time" value="${esc(meal.hora||'')}" onchange="setMealCampo(${mi},'hora',this.value)"></div><div style="flex:2"><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"></div></div>
-      <input placeholder="Descrição curta (opcional)" value="${esc(meal.desc||'')}" onchange="setMealCampo(${mi},'desc',this.value)" style="margin-top:8px">
+        <div class="fu-n"><span>${meal.foto?'Foto anexada por você. É assim que a cliente vê.':'Esta é a área da foto, exatamente como a cliente vê, acima do texto da refeição.'}</span>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)">
       `;
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
-      h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b>${pil(k,pp,cc,gg,1)}</div>
-        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii})">⇄ Trocar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
+      h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><em class="ms">${curta(f,it.g)}</em></div><div class="il-p">${pil(k,pp,cc,gg,1)}</div>
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii})">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi})">Trocar a refeição inteira</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi})">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
-      <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(obsDe(meal))}</textarea></div></details>`;
+</div></details>`;
   });
   h+=`<div class="card"><label style="margin-top:0">Recado para a cliente (opcional)</label><textarea id="nota" onchange="dieta.nota=this.value;save('dieta',dieta)">${esc(dieta.nota||'')}</textarea>
    <button class="full" onclick="aprovar()">${dieta.status==='aprovada'?'Atualizar dieta aprovada':'Aprovar e liberar'}</button>
@@ -2034,13 +2061,21 @@ function bibLista(mi){
 /* ===== Trocar um alimento dentro da refeição (vale só para esta dieta) ===== */
 function trocarItem(mi,ii){
   const o=$('ti'+mi+'_'+ii);if(o.innerHTML){o.innerHTML='';return;}
-  o.innerHTML=`<div class="nfbox"><input id="tq${mi}_${ii}" placeholder="Filtrar as opções de troca" oninput="trocaLista(${mi},${ii})" autocomplete="off"><div id="tl${mi}_${ii}" class="res" style="display:block"></div></div>`;trocaLista(mi,ii);
+  const me=dieta.meals[mi],it=me.itens[ii],subs=substituicoes(it,me.tipo,dados);PK[mi+'_'+ii]=subs;
+  if(!subs.length){o.innerHTML=`<div class="pk"><div class="sub" style="padding:6px 4px">Não há opções de troca para este alimento. Use "Buscar alimento" para adicionar outro e depois remova este.</div></div>`;return;}
+  o.innerHTML=`<div class="pk"><div class="pk-w"><div class="pk-band"></div><div class="pk-l" id="pkl${mi}_${ii}" onscroll="pkSel(${mi},${ii})">${subs.map((x,i)=>`<div class="pk-i" onclick="pkGo(${mi},${ii},${i})">${esc(x.x.n)}</div>`).join('')}</div></div>
+    <div class="pk-d" id="pkd${mi}_${ii}"></div><div class="pk-b"><button class="ib x" onclick="trocarItem(${mi},${ii})">Cancelar</button><button class="act main" onclick="pkOk(${mi},${ii})">Usar este</button></div></div>`;
+  pkSel(mi,ii);
 }
-function trocaLista(mi,ii){
-  const me=dieta.meals[mi],it=me.itens[ii],q=semAc($('tq'+mi+'_'+ii).value.trim()),ws=q.split(/[\s,]+/).filter(Boolean),o=$('tl'+mi+'_'+ii);
-  const subs=substituicoes(it,me.tipo,dados).filter(x=>!ws.length||ws.every(w=>semAc(x.x.n).includes(w)));
-  o.innerHTML=subs.length?subs.map(x=>`<button class="resb" onclick="aplicarTroca(${mi},${ii},'${x.id}',${x.g})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]}</small>${pil(x.x.k*x.g/100,x.x.p*x.g/100,x.x.c*x.g/100,x.x.g*x.g/100)}${x.dif?`<small>${x.dif}</small>`:''}</span></button>`).join(''):`<div class="sub" style="padding:8px">Nenhuma opção de troca${ws.length?' com essa palavra':' para este alimento'}. Para um alimento fora da lista, use "Buscar alimento para adicionar" e depois remova o outro.</div>`;
+const PK={};
+function pkIdx(mi,ii){const l=$('pkl'+mi+'_'+ii);return Math.max(0,Math.min(PK[mi+'_'+ii].length-1,Math.round(l.scrollTop/44)));}
+function pkSel(mi,ii){
+  const i=pkIdx(mi,ii),x=PK[mi+'_'+ii][i],l=$('pkl'+mi+'_'+ii);
+  [...l.children].forEach((e,k)=>e.classList.toggle('on',k===i));
+  $('pkd'+mi+'_'+ii).innerHTML=`<span class="pk-q">${x.g} g · ${x.txt.split(' - ')[0]}</span>${pil(x.x.k*x.g/100,x.x.p*x.g/100,x.x.c*x.g/100,x.x.g*x.g/100)}${x.dif?`<span class="pk-q">${x.dif}</span>`:''}`;
 }
+function pkGo(mi,ii,i){$('pkl'+mi+'_'+ii).scrollTo({top:i*44,behavior:'smooth'});}
+function pkOk(mi,ii){const x=PK[mi+'_'+ii][pkIdx(mi,ii)];aplicarTroca(mi,ii,x.id,x.g);}
 function aplicarTroca(mi,ii,id,g){
   const me=dieta.meals[mi],it=me.itens[ii],velho=F[it.f],novo=F[id];if(!novo)return;
   const pri=n=>n.split(' ')[0].toLowerCase();
@@ -2126,7 +2161,7 @@ function recalcDia(){
 function remItem(mi,ii){const me=dieta.meals[mi],f=F[me.itens[ii].f];me.editado=true;me.itens.splice(ii,1);save('dieta',dieta);logH('edicao',me.nome+': removeu '+f.n);renderAdmin();}
 
 /* ----- busca e cadastro de alimentos (área da nutricionista) ----- */
-const pil=(k,p,c,g,d)=>{const f=d?(x=>br(r1(x))):(x=>Math.round(x));return `<span class="mcp"><i class="k">${Math.round(k)} kcal</i><i class="p">P ${f(p)}</i><i class="c">C ${f(c)}</i><i class="g">G ${f(g)}</i></span>`;};
+const pil=(k,p,c,g,d)=>{const f=d?(x=>br(r1(x))):(x=>Math.round(x));return `<span class="mcp"><i class="k">${Math.round(k)} kcal</i><i class="p">PTN ${f(p)}</i><i class="c">CHO ${f(c)}</i><i class="g">LIP ${f(g)}</i></span>`;};
 const semAc=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const rotulo=f=>`${Math.round(f.k*f.u.g/100)} kcal · 1 ${f.u.s} (${f.u.g} g)`;
 function buscaAlim(mi){
