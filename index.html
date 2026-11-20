@@ -747,6 +747,19 @@ body.claro .pk{background:#fff}
 
 .dchips{display:flex;gap:6px;margin:12px 0 4px;overflow-x:auto;padding-bottom:2px}.dchips button{flex:1;min-width:44px;background:#efefed;color:#6b6567;border-radius:12px;padding:8px 0;font-size:12.5px;font-weight:600;min-height:0;position:relative}
 .dchips button.on{background:#713C43;color:#fff}.dchips button.hj:after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:#7f9b78;transform:translateX(-50%)}
+
+/* ===== Revisão em faixa horizontal: uma refeição ao lado da outra ===== */
+body{overflow-x:clip}
+.mstrip{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+  padding:2px 0 16px;scrollbar-width:thin}
+.mstrip details.mcard{flex:0 0 min(380px,86vw);margin:0;scroll-snap-align:start}
+.mstrip details.mcard>summary{cursor:default}.mstrip details.mcard>summary svg,.mstrip details.mcard>summary .chev{display:none}
+.mstrip .fu-ph{aspect-ratio:3/2}.mstrip .fu-n span{font-size:11.5px}
+.mstrip details.mcard>summary::after{display:none}
+.mstrip::-webkit-scrollbar{height:8px}.mstrip::-webkit-scrollbar-thumb{background:#d4d2d3;border-radius:8px}
+
+.mnav{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:10px 0 8px}.mnav span{font-size:12px;color:#8b8587;margin-right:auto}
+.mnav button{width:34px;height:34px;min-height:0;border-radius:50%;background:#fff;border:1px solid #e3e1e2;color:#713C43;font-size:20px;line-height:1;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.05)}.mnav button:hover{background:#f1e6e8}
 </style>
 </head>
 <body>
@@ -1943,10 +1956,10 @@ function renderAdmin(){
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
-  h+=chipsDias('admDia');
+  h+=chipsDias('admDia')+'<div class="mnav"><span>Role para o lado para ver as outras refeições</span><button onclick="faixa(-1)" aria-label="Anterior">‹</button><button onclick="faixa(1)" aria-label="Próxima">›</button></div><div class="mstrip">';
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
-    h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
+    h+=`<details class="mcard" open><summary onclick="event.preventDefault()"><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
       <div class="mcard-b"><div class="fotoup"><div class="mv-ph${(meal.foto||fotoDe(meal))?'':' noimg'} fu-ph">${(meal.foto||fotoDe(meal))?`<img src="${meal.foto||fotoDe(meal)}" alt="" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div><div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2></div>
           <label class="fu-btn">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label></div>
         <div class="fu-n"><span>${meal.foto?'Foto anexada por você. É assim que a cliente vê.':'Esta é a área da foto, exatamente como a cliente vê, acima do texto da refeição.'}</span>${meal.foto?`<button class="mini light" onclick="removerFoto(${mi})">Remover foto</button>`:''}</div></div><label>Título da refeição</label><input value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)">
@@ -1961,6 +1974,7 @@ function renderAdmin(){
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
 </div></details>`;
   });
+  h+='</div>';
   h+=`<div class="card"><label style="margin-top:0">Recado para a cliente (opcional)</label><textarea id="nota" onchange="dieta.nota=this.value;save('dieta',dieta)">${esc(dieta.nota||'')}</textarea>
    <button class="full" onclick="aprovar()">${dieta.status==='aprovada'?'Atualizar dieta aprovada':'Aprovar e liberar'}</button>
    ${dieta.status==='aprovada'?`<button class="full light" onclick="dieta.status='pendente';save('dieta',dieta);logH('aprovacao','Dieta voltou para revisão.');renderAdmin()">Voltar para em revisão</button>`:''}
@@ -2653,6 +2667,19 @@ function semearDemo(){
   dados=d;dieta=di;pesos=[{d:hoje(),kg:70}];trocas={};checks={};
   save('dados',dados);save('dieta',dieta);save('pesos',pesos);save('trocas',trocas);save('checks',checks);
 }
+/* a faixa de refeições ocupa a largura toda da tela, começando alinhada com a coluna */
+function faixa(d){const st=document.querySelector('.mstrip');if(st)st.scrollBy({left:d*410,behavior:'smooth'});}
+function ajustaFaixa(){
+  const W=document.documentElement.clientWidth;
+  document.querySelectorAll('.mstrip').forEach(st=>{
+    st.style.marginLeft=st.style.marginRight=st.style.paddingLeft=st.style.paddingRight='';
+    const r=st.parentElement.getBoundingClientRect();
+    st.style.marginLeft=(-r.left)+'px';st.style.marginRight=(-(W-r.right))+'px';
+    st.style.paddingLeft=Math.max(16,r.left)+'px';st.style.paddingRight='16px';st.style.scrollPaddingLeft=Math.max(16,r.left)+'px';
+  });
+}
+try{new MutationObserver(()=>{ajustaFaixa();requestAnimationFrame(ajustaFaixa);setTimeout(ajustaFaixa,250);}).observe($('adminOut'),{childList:true});}catch(e){}
+window.addEventListener('resize',ajustaFaixa);
 if(DEMO&&!dados)semearDemo();
 formMeta();
 tab('inicio');
