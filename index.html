@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nutri</title>
+<title>NutriJá</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="imagens/icone-180.png">
+<link rel="icon" type="image/png" href="imagens/icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NutriJá">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f2f2f1">
+<script>if(/[?&]demo(=|&|$)/.test(location.search)){document.title='NutriJá demo';var m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content='NutriJá demo';}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
@@ -1028,25 +1037,27 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const load=(k,d)=>{try{return JSON.parse(localStorage.getItem('nutri3_'+k))??d}catch(e){return d}};
+const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
+const PFX=DEMO?'nutridemo_':'nutri3_';
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
 const SYNCK=['dados','dieta','pesos','checks','trocas'];
-const save=(k,v)=>{if(NUVEM&&nutriMode&&SYNCK.indexOf(k)>=0){if(k==='dieta')planoPush();return;}try{localStorage.setItem('nutri3_'+k,JSON.stringify(v))}catch(e){}if(SYNCK.indexOf(k)>=0){sync();nuvemPush();}};
+const save=(k,v)=>{if(NUVEM&&nutriMode&&SYNCK.indexOf(k)>=0){if(k==='dieta')planoPush();return;}try{localStorage.setItem(PFX+k,JSON.stringify(v))}catch(e){}if(SYNCK.indexOf(k)>=0){sync();nuvemPush();}};
 /* alimentos extras (TACO completa, TBCA ou rótulo) cadastrados na área da nutricionista */
 /* ----- clientes e histórico (guardados neste aparelho) ----- */
 function CL(){return load('clientes',[]);}
-function saveCL(l){try{localStorage.setItem('nutri3_clientes',JSON.stringify(l))}catch(e){}}
+function saveCL(l){try{localStorage.setItem(PFX+'clientes',JSON.stringify(l))}catch(e){}}
 let _sync=false;
 function sync(){
   if(_sync||(NUVEM&&nutriMode))return;
   try{
     if(!dados)return;
     _sync=true;
-    if(!dados.id){dados.id='c'+Date.now().toString(36);try{localStorage.setItem('nutri3_dados',JSON.stringify(dados))}catch(e){}}
+    if(!dados.id){dados.id='c'+Date.now().toString(36);try{localStorage.setItem(PFX+'dados',JSON.stringify(dados))}catch(e){}}
     const l=CL();let r=l.find(x=>x.id===dados.id);
     if(!r){r={id:dados.id,hist:[],criado:Date.now()};l.push(r);}
     Object.assign(r,{nome:dados.nome,dados,dieta,pesos,checks,trocas,atualizado:Date.now()});
     saveCL(l);
-    if(!nutriMode)try{localStorage.setItem('nutri3_meuId',JSON.stringify(dados.id))}catch(e){}
+    if(!nutriMode)try{localStorage.setItem(PFX+'meuId',JSON.stringify(dados.id))}catch(e){}
   }catch(e){}finally{_sync=false;}
 }
 /* ===== Nuvem (Supabase): clientes, planos e histórico acessíveis de qualquer aparelho ===== */
@@ -1058,7 +1069,7 @@ try{
     sbA=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'nutri-adm',persistSession:true,autoRefreshToken:true}});
   }
 }catch(e){sbC=null;sbA=null;}
-const NUVEM=!!(sbC&&sbA);
+const NUVEM=!DEMO&&!!(sbC&&sbA);
 const iso=()=>new Date().toISOString();
 async function sessaoCli(){
   if(!NUVEM)return null;
@@ -1071,7 +1082,7 @@ async function nuvemPushAgora(){
   try{
     if(!dados||!dados.id)return;
     const ses=await sessaoCli();if(!ses)return;
-    if(!dados.dadosEm){dados.dadosEm=iso();try{localStorage.setItem('nutri3_dados',JSON.stringify(dados))}catch(e){}}
+    if(!dados.dadosEm){dados.dadosEm=iso();try{localStorage.setItem(PFX+'dados',JSON.stringify(dados))}catch(e){}}
     const row={id:dados.id,nome:dados.nome,dados,pesos,checks,trocas,atualizado:iso(),dados_em:dados.dadosEm};
     const r=await sbC.from('clientes').upsert(row,{onConflict:'id'});
     if(r.error){console.warn('push',r.error.message);return;}
@@ -1081,12 +1092,12 @@ async function nuvemPushAgora(){
 async function flushEventos(){
   const fila=load('fila',[]).filter(x=>x.quem==='cliente');if(!fila.length)return;
   const r=await sbC.from('eventos').insert(fila);
-  if(!r.error){try{localStorage.setItem('nutri3_fila',JSON.stringify(load('fila',[]).filter(x=>x.quem!=='cliente')))}catch(e){}}
+  if(!r.error){try{localStorage.setItem(PFX+'fila',JSON.stringify(load('fila',[]).filter(x=>x.quem!=='cliente')))}catch(e){}}
 }
 async function nuvemApagar(id){
   if(!NUVEM||!id)return;
   try{const g=await sbC.auth.getSession();if(g.data&&g.data.session)await sbC.from('clientes').delete().eq('id',id);}catch(e){}
-  try{localStorage.removeItem('nutri3_fila')}catch(e){}
+  try{localStorage.removeItem(PFX+'fila')}catch(e){}
 }
 async function nuvemPull(){
   if(!NUVEM||nutriMode||!dados||!dados.id)return false;
@@ -1099,7 +1110,7 @@ async function nuvemPull(){
       const nd=p.data.dieta;nd.status='aprovada';
       if(JSON.stringify(nd)!==JSON.stringify(dieta)){dieta=nd;trocas=trocasValidas(trocas);mudou=true;}
     }else if(dieta&&dieta.status==='aprovada'){dieta.status='pendente';mudou=true;}
-    if(mudou){try{localStorage.setItem('nutri3_dieta',JSON.stringify(dieta))}catch(e){}sync();}
+    if(mudou){try{localStorage.setItem(PFX+'dieta',JSON.stringify(dieta))}catch(e){}sync();}
     return mudou;
   }catch(e){return false;}
 }
@@ -1131,7 +1142,7 @@ function logH(tipo,txt){
         sbA.from('eventos').insert(e).then(r=>{if(r.error)console.warn(r.error.message)});
       }else{
         sync();const f=load('fila',[]);f.push({cliente_id:dados.id,quem:'cliente',tipo,txt,t:iso()});
-        try{localStorage.setItem('nutri3_fila',JSON.stringify(f))}catch(e){}
+        try{localStorage.setItem(PFX+'fila',JSON.stringify(f))}catch(e){}
         const l=CL(),r=l.find(x=>x.id===dados.id);if(r){(r.hist=r.hist||[]).push({t:Date.now(),tipo,txt});saveCL(l);}
         nuvemPush();
       }
@@ -1677,7 +1688,7 @@ async function entrarNutriNuvem(){
     if(r.error){aviso('E-mail ou senha incorretos.');return;}
     const ad=await sbA.from('admins').select('uid').maybeSingle();
     if(!ad.data){await sbA.auth.signOut();aviso('Este acesso não é de administradora.');return;}
-    try{localStorage.setItem('nutri3_admEmail',email.trim())}catch(e){}
+    try{localStorage.setItem(PFX+'admEmail',email.trim())}catch(e){}
     entrouAdmin();
   });
 }
@@ -1815,7 +1826,7 @@ function restaurarDono2(){
     if(dados&&dados.id===meu)return;
     const r=CL().find(x=>x.id===meu);if(!r)return;
     dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;
-    try{localStorage.setItem('nutri3_dados',JSON.stringify(dados));localStorage.setItem('nutri3_dieta',JSON.stringify(dieta));localStorage.setItem('nutri3_pesos',JSON.stringify(pesos));localStorage.setItem('nutri3_checks',JSON.stringify(checks));localStorage.setItem('nutri3_trocas',JSON.stringify(trocas));}catch(e){}
+    try{localStorage.setItem(PFX+'dados',JSON.stringify(dados));localStorage.setItem(PFX+'dieta',JSON.stringify(dieta));localStorage.setItem(PFX+'pesos',JSON.stringify(pesos));localStorage.setItem(PFX+'checks',JSON.stringify(checks));localStorage.setItem(PFX+'trocas',JSON.stringify(trocas));}catch(e){}
   }catch(e){}
 }
 const fmtData=t=>{const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
@@ -1823,7 +1834,7 @@ function abrirCliente_local(id){
   sync();
   const r=CL().find(x=>x.id===id);if(!r)return;
   dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};mealSel=0;objD=null;admAb=new Set([0]);
-  try{localStorage.setItem('nutri3_dados',JSON.stringify(dados));localStorage.setItem('nutri3_dieta',JSON.stringify(dieta));localStorage.setItem('nutri3_pesos',JSON.stringify(pesos));localStorage.setItem('nutri3_checks',JSON.stringify(checks));localStorage.setItem('nutri3_trocas',JSON.stringify(trocas));}catch(e){}
+  try{localStorage.setItem(PFX+'dados',JSON.stringify(dados));localStorage.setItem(PFX+'dieta',JSON.stringify(dieta));localStorage.setItem(PFX+'pesos',JSON.stringify(pesos));localStorage.setItem(PFX+'checks',JSON.stringify(checks));localStorage.setItem(PFX+'trocas',JSON.stringify(trocas));}catch(e){}
   admView='dieta';renderAdmin();window.scrollTo(0,0);
 }
 function removerCliente_local(id,semDialogo){
@@ -1833,7 +1844,7 @@ function removerCliente_local(id,semDialogo){
     if(!semDialogo){
       const meu=load('meuId',null);
       if(dados&&dados.id===id){recomecar();}
-      if(meu===id)try{localStorage.removeItem('nutri3_meuId')}catch(e){}
+      if(meu===id)try{localStorage.removeItem(PFX+'meuId')}catch(e){}
       admView='clientes';renderAdmin();
     }
   };
@@ -2187,7 +2198,7 @@ function addAlim(mi,k,id){
     id=f.id;
   }
   dieta.meals[mi].editado=true;dieta.meals[mi].itens.push({f:id,g:F[id].u.g});save('dieta',dieta);
-  try{localStorage.setItem('nutri3_recentes',JSON.stringify([id,...load('recentes',[]).filter(x=>x!==id)].slice(0,12)))}catch(e){}
+  try{localStorage.setItem(PFX+'recentes',JSON.stringify([id,...load('recentes',[]).filter(x=>x!==id)].slice(0,12)))}catch(e){}
   admAb.add(mi);logH('edicao',dieta.meals[mi].nome+': acrescentou '+F[id].n);renderAdmin();
 }
 function formAlim(mi){
@@ -2574,7 +2585,7 @@ if(dados){
     if(meu&&dados&&dados.id&&dados.id!==meu){
       const r=CL().find(x=>x.id===meu);
       if(r){dados=r.dados;dieta=r.dieta;pesos=r.pesos||[];checks=r.checks||{};trocas=r.trocas||{};
-        ['dados','dieta','pesos','checks','trocas'].forEach(k=>{try{localStorage.setItem('nutri3_'+k,JSON.stringify(k==='dados'?dados:k==='dieta'?dieta:k==='pesos'?pesos:k==='checks'?checks:trocas))}catch(e){}});}
+        ['dados','dieta','pesos','checks','trocas'].forEach(k=>{try{localStorage.setItem(PFX+k,JSON.stringify(k==='dados'?dados:k==='dieta'?dieta:k==='pesos'?pesos:k==='checks'?checks:trocas))}catch(e){}});}
     }
     if(dados)sync();
   }catch(e){}
@@ -2590,9 +2601,21 @@ function apagarDados(){
     nutriMode=false;tab('inicio');
   });
 }
-function recomecar(){['dados','dieta','pesos','checks','trocas','nome'].forEach(k=>{try{localStorage.removeItem('nutri3_'+k)}catch(e){}});dados=null;dieta=null;pesos=[];checks={};trocas={};nomeRascunho='';mealSel=0;objD=null;}
+function recomecar(){['dados','dieta','pesos','checks','trocas','nome'].forEach(k=>{try{localStorage.removeItem(PFX+k)}catch(e){}});dados=null;dieta=null;pesos=[];checks={};trocas={};nomeRascunho='';mealSel=0;objD=null;}
 if(location.hash==='#novo'){nuvemApagar(dados&&dados.id);recomecar();history.replaceState&&history.replaceState(null,'',location.pathname+location.search);}
 if(NUVEM){document.addEventListener('visibilitychange',()=>{if(!document.hidden)nuvemAtualizar();});setInterval(()=>{if(!document.hidden)nuvemAtualizar();},30000);if(dados&&dados.id)nuvemPush();}
+function semearDemo(){
+  const d={id:'demo',nome:'Jade',sexo:'f',idade:30,altura:165,peso:70,atv:2,obj:'emagrecer',ajuste:500,metaKg:5,metaPeso:65,refs:4,restr:[],dislikes:[],caneta:false,formula:'auto',dadosEm:new Date().toISOString()};
+  const di=gerarDieta(d),pegar=(re)=>{const f=FOODS.find(x=>re.test(x.n));return f&&f.id;};
+  const trocar=(me,titulo,itens,foto,preparo)=>{const its=itens.filter(i=>F[i[0]]).map(i=>({f:i[0],g:i[1]}));if(its.length>=3){me.itens=its;me.titulo=titulo;me.foto=foto;me.preparo=preparo;me.prato=null;me.bibId=undefined;me.editado=true;}};
+  const alm=di.meals.find(m=>m.tipo==='almoco'),jan=di.meals.find(m=>m.tipo==='jantar');
+  if(alm)trocar(alm,'Arroz, frango grelhado, abobrinha e cenoura',[['arrozbranco',100],['frango',120],['abobrinha',60],['cenoura',50],['azeite',4]],'imagens/refeicoes/alm-arroz-frango.jpg','Frango temperado com alho, limão e páprica, grelhado ou na airfryer. Abobrinha e cenoura refogadas no azeite com cebola e alho.');
+  if(jan)trocar(jan,'Batata assada, merluza, abobrinha grelhada e salada',[['batatainglesa',150],['peixe',120],['abobrinha',60],['rucula',20],['alface',20],['azeite',4]],'imagens/refeicoes/alm-batata-merluza.jpg','Batata em pedaços assada no forno ou na airfryer até dourar. Merluza assada com limão e pimenta. Abobrinha em rodelas grelhada. Salada de rúcula e alface.');
+  di.status='aprovada';di.nota='Esta é uma paciente de exemplo, para você ver como o app aparece no celular.';
+  dados=d;dieta=di;pesos=[{d:hoje(),kg:70}];trocas={};checks={};
+  save('dados',dados);save('dieta',dieta);save('pesos',pesos);save('trocas',trocas);save('checks',checks);
+}
+if(DEMO&&!dados)semearDemo();
 formMeta();
 tab('inicio');
 </script>
