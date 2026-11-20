@@ -744,6 +744,9 @@ body.claro .pk{background:#fff}
 .pop-i:hover,.pop-i:active{background:rgba(60,60,67,.08)}
 .pop-i b{display:block;font-size:16px;font-weight:400}.pop-i small{display:block;font-size:12.5px;color:#8e8e93;margin-top:1px}.pop-i em{font-style:normal;font-size:13px;color:#8e8e93;white-space:nowrap}
 .pop-i .mcp{margin-top:5px}.pop-v{padding:16px 18px;font-size:14px;color:#6e6e73}
+
+.dchips{display:flex;gap:6px;margin:12px 0 4px;overflow-x:auto;padding-bottom:2px}.dchips button{flex:1;min-width:44px;background:#efefed;color:#6b6567;border-radius:12px;padding:8px 0;font-size:12.5px;font-weight:600;min-height:0;position:relative}
+.dchips button.on{background:#713C43;color:#fff}.dchips button.hj:after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:#7f9b78;transform:translateX(-50%)}
 </style>
 </head>
 <body>
@@ -1309,22 +1312,23 @@ function tituloItens(itens){
 }
 const NOME_REF={cafe:'Café da manhã',lanchem:'Lanche da manhã',almoco:'Almoço',lanche:'Lanche da tarde',jantar:'Jantar',ceia:'Ceia'};
 /* Modelos da biblioteca que servem a esta cliente: perfil (caneta ou normal), restrições e o que ela não come. */
-function bibEscolher(chave,p,usados){
+function bibEscolher(chave,p,usados,evitar){
   if(typeof BIB==='undefined'||!BIB.length)return null;
   const rs=restricoes(p),vg=rs.includes('vegan')?'vegana':rs.includes('veg')?'vegetariana':null,perfil=p.caneta?'caneta':'normal',dl=(p.dislikes||[]).filter(Boolean);
   const ok=b=>b.tipo===NOME_REF[chave]&&(b.perfil||[]).includes(perfil)&&!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg))
-    &&b.itens.every(i=>F[i.f])&&!usados.has(b.grupo||b.id)&&!dl.some(d=>semAc(b.nome+' '+b.itens.map(i=>F[i.f].n).join(' ')).includes(semAc(d)));
+    &&b.itens.every(i=>F[i.f])&&!usados.has(b.grupo||b.id)&&!(evitar&&evitar.has(b.grupo||b.id))&&!dl.some(d=>semAc(b.nome+' '+b.itens.map(i=>F[i.f].n).join(' ')).includes(semAc(d)));
   const l=BIB.filter(ok);if(!l.length)return null;
   const gr={};l.forEach(b=>(gr[b.grupo||b.id]=gr[b.grupo||b.id]||[]).push(b));
   const g=pickOf(Object.keys(gr));const v=gr[g];
   return {b:v.find(x=>!x.variante)||v[0],g};
 }
-function gerarRefeicao(chave,tipo,pct,p,meta,usados){
+function gerarRefeicao(chave,tipo,pct,p,meta,usados,evitar){
   const m=MTAG[tipo];
-  const bb=bibEscolher(chave,p,usados);
+  const bb=bibEscolher(chave,p,usados,evitar)||bibEscolher(chave,p,usados);
   if(bb){usados.add(bb.g);const b=bb.b;
     return {chave,nome:L.refeicoes[chave],tipo,titulo:b.nome,prato:null,bibId:b.id,preparo:b.obs||'',obs:'',notaCaneta:b.notaCaneta||'',itens:b.itens.map(i=>({f:i.f,g:i.g})),dica:pickOf(L.dicas[tipo])};}
-  const lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
+  let lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)&&!(evitar&&evitar.has(d.n))).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
+  if(!lista.length)lista=(PRATOS[tipo]||[]).filter(d=>!usados.has(d.n)).map(d=>({d,it:montarPrato(d,p)})).filter(x=>x.it);
   let esc_,titulo,pratoId=null;
   if(lista.length){const e=escolherPadrao(lista,p.obj,tipo);esc_=e.it;titulo=e.d.n;pratoId=e.d.id;usados.add(e.d.n);}
   else{ /* restrições fortes: monta pelos grupos de alimentos */
@@ -1388,13 +1392,38 @@ function reforcar(d,p){
     const id=lista[0];me.itens.push({f:id,g:REFQ[id]});me.reforco=true;
   });
 }
+/* Semana: 7 dias, cada refeição com um modelo diferente a cada dia (quando a biblioteca tem modelos suficientes) */
+const DIAS_SEM=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const hojeIdx=()=>(new Date().getDay()+6)%7;
+const diasOk=d=>!!(d&&Array.isArray(d.dias)&&d.dias.length===7);
+function syncAtivo(){if(diasOk(dieta))dieta.dias[dieta.dia||0]=dieta.meals;}
 function gerarDieta(p){
-  const meta=metas(p),usados=new Set();
-  const d={status:'pendente',geradaEm:hoje(),meta,nota:'',meals:distDe(p).map(([c,t,pc])=>gerarRefeicao(c,t,pc,p,meta,usados))};
-  if(p.obj==='ganhar')reforcar(d,p);
+  const meta=metas(p),evitar={},dias=[];
+  for(let k=0;k<7;k++){
+    const usados=new Set();
+    const dia={status:'pendente',geradaEm:hoje(),meta,nota:'',meals:distDe(p).map(([c,t,pc])=>{
+      const ev=(evitar[c]=evitar[c]||new Set());
+      const me=gerarRefeicao(c,t,pc,p,meta,usados,ev);
+      const b=me.bibId&&BIB.find(x=>x.id===me.bibId);ev.add(b?(b.grupo||b.id):me.titulo);
+      return me;})};
+    if(p.obj==='ganhar')reforcar(dia,p);
+    balancear(dia,p);dias.push(dia);
+  }
+  const d=dias[0];d.dias=dias.map(x=>x.meals);d.dia=0;
   d.fonte=d.meals.some(m=>m.bibId)?'biblioteca':'padrao';
-  return balancear(d,p);
+  return d;
 }
+function setDia(i){
+  if(!diasOk(dieta)||i===(dieta.dia||0))return;
+  syncAtivo();
+  const cur=dieta.dia||0,mp=trocas._dias=trocas._dias||{};
+  const flat={...trocas};delete flat._dias;mp[cur]=flat;
+  const nv={...(mp[i]||{})};nv._dias=mp;trocas=nv;
+  dieta.dia=i;dieta.meals=dieta.dias[i];mealSel=0;
+}
+const chipsDias=fn=>diasOk(dieta)?`<div class="dchips">${DIAS_SEM.map((n,i)=>`<button class="${i===(dieta.dia||0)?'on':''}${i===hojeIdx()?' hj':''}" onclick="${fn}(${i})">${n}</button>`).join('')}</div>`:'';
+function selDia(i){window._diaEsc=true;setDia(i);save('dieta',dieta);save('trocas',trocas);renderDieta();}
+function admDia(i){setDia(i);admAb=new Set([0]);save('dieta',dieta);renderAdmin();}
 
 function totais(meal){return meal.itens.reduce((a,i)=>{const f=F[i.f],q=i.g/100;a.k+=f.k*q;a.p+=f.p*q;a.c+=f.c*q;a.g+=f.g*q;return a},{k:0,p:0,c:0,g:0});}
 function totaisDia(d){return d.meals.reduce((a,m)=>{const t=totais(m);['k','p','c','g'].forEach(x=>a[x]+=t[x]);return a},{k:0,p:0,c:0,g:0});}
@@ -1474,9 +1503,11 @@ const curta=(f,g)=>{const q=qDe(f,g);return f.e?`${fmtQ(q)} ${q>1?f.e[1]:f.e[0]}
 function thumb(f){const a=f.t&&ALIMBY[f.t];const cor=a?corDe(a):'#d7d5d5';
   return `<div class="th" style="background:${cor}"><span>${esc(f.n.charAt(0))}</span><img src="imagens/alimentos/${f.id}.jpg" alt="" loading="lazy" onerror="this.remove()"></div>`;}
 function selMeal(i){mealSel=i;renderDieta();}
+function abrirHoje(){if(!nutriMode&&!window._diaEsc&&diasOk(dieta)&&(dieta.dia||0)!==hojeIdx()){setDia(hojeIdx());}}
 function escolherTroca(mi,ii,fid,g){const k=mi+':'+ii;if(trocas[k]&&trocas[k].f===fid)delete trocas[k];else trocas[k]={f:fid,g};save('trocas',trocas);renderDieta();}
 function limparTroca(mi,ii){delete trocas[mi+':'+ii];save('trocas',trocas);renderDieta();}
 function renderDieta(){
+  abrirHoje();
   const o=$('dietaOut');
   if(!dados){o.innerHTML=`<div class="card tint"><h2>Vamos <em>começar</em></h2><p>Para montar a sua dieta, preciso conhecer você. Conte um pouco sobre você na aba Meus dados.</p><button style="margin-top:12px" onclick="tab('dados')">Preencher meus dados</button></div>`;return;}
   if(dieta.status!=='aprovada'){
@@ -1488,7 +1519,7 @@ function renderDieta(){
   const mi=Math.min(mealSel,dieta.meals.length-1),meal=dieta.meals[mi],its=itensEf(meal,mi),tt=totaisI(its);
   const trocada=its.some(i=>i.troca);
   const fotoU=meal.foto||(!meal.reforco&&!trocada?fotoDe(meal):'');const foto=fotoU;
-  h+=`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
+  h+=chipsDias('selDia')+`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
   h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="${fotoU}" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
       <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
     <div class="mv-sheet"><div class="mv-card">
@@ -1516,7 +1547,8 @@ function renderCompras(){
   const o=$('comprasOut');
   if(!dieta||dieta.status!=='aprovada'){o.innerHTML=`<div class="card tint"><h2>Compras <em>da semana</em></h2><p>Assim que eu aprovar a sua dieta, a lista aparece aqui, em embalagens inteiras, como são vendidas no mercado.</p></div>`;return;}
   const tot={};
-  dieta.meals.forEach(m=>m.itens.forEach(i=>{tot[i.f]=(tot[i.f]||0)+i.g*7*(F[i.f].cru||1);}));
+  syncAtivo();const diasL=diasOk(dieta)?dieta.dias:[dieta.meals],mult=diasOk(dieta)?1:7;
+  diasL.forEach(ms=>ms.forEach(m=>m.itens.forEach(i=>{tot[i.f]=(tot[i.f]||0)+i.g*mult*(F[i.f].cru||1);})));
   const porSec={};
   Object.entries(tot).forEach(([id,g])=>{const f=F[id];(porSec[f.sec]??=[]).push({f,g,n:Math.ceil(g/f.pk.g-.001)});});
   let h=`<div class="card tint"><h2>Lista para 7 dias</h2><div class="sub" style="color:#7a5a5c">Montei a lista para 7 dias de dieta, em embalagens inteiras, sem frações. Arroz, feijão e carnes já estão convertidos para o peso cru.</div></div>`;
@@ -1911,6 +1943,7 @@ function renderAdmin(){
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
+  h+=chipsDias('admDia');
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
     h+=`<details class="mcard" ${admAb.has(mi)?'open':''} ontoggle="admToggle(${mi},this.open)"><summary><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
@@ -2231,7 +2264,7 @@ async function salvarDadosSem(){
   if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
 }
 function recalcular(msg){
-  balancear(dieta,dados);save('dieta',dieta);mealSel=Math.min(mealSel,dieta.meals.length-1);
+  syncAtivo();(diasOk(dieta)?dieta.dias:[dieta.meals]).forEach(ms=>balancear({meta:dieta.meta,meals:ms},dados));save('dieta',dieta);mealSel=Math.min(mealSel,dieta.meals.length-1);
   const t=totaisDia(dieta),k=dieta.meta.kcal,pc=Math.round(t.k/k*100);
   logH('edicao',msg+' Dieta recalculada: '+Math.round(t.k)+' kcal ('+pc+'% da meta).');
   admAb=new Set();renderAdmin();
@@ -2243,8 +2276,8 @@ function removerRefeicao(mi){
   if(!c){aviso('Não consegui identificar esta refeição.');return;}
   ask('Remover "'+me.nome+'" da dieta desta cliente? As calorias dela serão distribuídas entre as outras refeições. Você pode trazê-la de volta depois.',async()=>{
     dados.sem=[...(dados.sem||[]).filter(x=>x!==c),c];
-    dieta.meals.splice(mi,1);
-    const nt={};Object.keys(trocas).forEach(k=>{const [a,b]=k.split(':').map(Number);if(a<mi)nt[k]=trocas[k];else if(a>mi)nt[(a-1)+':'+b]=trocas[k];});trocas=nt;save('trocas',trocas);
+    syncAtivo();(diasOk(dieta)?dieta.dias:[dieta.meals]).forEach(ms=>ms.splice(mi,1));if(diasOk(dieta))dieta.meals=dieta.dias[dieta.dia||0];
+    trocas={};save('trocas',trocas);
     await salvarDadosSem();recalcular(me.nome+' removida.');
   });
 }
@@ -2252,11 +2285,11 @@ async function restaurarRefeicao(c){
   const lista=DIST[dados.refs]||[],ent=lista.find(x=>x[0]===c);if(!ent)return;
   if(!BIB.length)await bibCarregar();
   dados.sem=(dados.sem||[]).filter(x=>x!==c);
-  const usados=new Set(dieta.meals.map(m=>{const b=m.bibId&&BIB.find(x=>x.id===m.bibId);return b?(b.grupo||b.id):''}));
-  const nova=gerarRefeicao(c,ent[1],ent[2],dados,dieta.meta,usados);
-  const ordem=lista.map(x=>x[0]);let pos=dieta.meals.findIndex(m=>ordem.indexOf(chaveDe(m))>ordem.indexOf(c));if(pos<0)pos=dieta.meals.length;
-  dieta.meals.splice(pos,0,nova);
-  const nt={};Object.keys(trocas).forEach(k=>{const [a,b]=k.split(':').map(Number);nt[(a>=pos?a+1:a)+':'+b]=trocas[k];});trocas=nt;save('trocas',trocas);
+  syncAtivo();const ordem=lista.map(x=>x[0]);let pos=dieta.meals.findIndex(m=>ordem.indexOf(chaveDe(m))>ordem.indexOf(c));if(pos<0)pos=dieta.meals.length;
+  const evi=new Set();let nova;
+  (diasOk(dieta)?dieta.dias:[dieta.meals]).forEach(ms=>{const us=new Set(ms.map(m=>{const b=m.bibId&&BIB.find(x=>x.id===m.bibId);return b?(b.grupo||b.id):''}));const n=gerarRefeicao(c,ent[1],ent[2],dados,dieta.meta,us,evi);const b=n.bibId&&BIB.find(x=>x.id===n.bibId);evi.add(b?(b.grupo||b.id):n.titulo);ms.splice(pos,0,n);if(ms===dieta.meals)nova=n;});
+  if(diasOk(dieta))dieta.meals=dieta.dias[dieta.dia||0];if(!nova)nova=dieta.meals[pos];
+  trocas={};save('trocas',trocas);
   await salvarDadosSem();recalcular(nova.nome+' de volta à dieta.');
 }
 async function refazerBib(){
@@ -2485,6 +2518,7 @@ const step=(n,c,t,d)=>`<div class="step" style="background:${c}"><i>${n}</i><div
 let verApres=false;
 function verApresentacao(){tab('inicio');verApres=true;renderInicio();$('titulo').style.display='none';$('btnVoltar').style.display='inline-flex';window.scrollTo(0,0);}
 function renderInicio(){
+  abrirHoje();
   const o=$('inicioOut');
   const ex={k:1800,p:105,c:215,g:60};
   const mock=`<div class="mock"><div class="card">${ring(ex)}<div class="sub" style="margin-top:10px;font-size:12px">exemplo de plano</div></div>
@@ -2612,7 +2646,7 @@ function semearDemo(){
   const d={id:'demo',nome:'Jade',sexo:'f',idade:30,altura:165,peso:70,atv:2,obj:'emagrecer',ajuste:500,metaKg:5,metaPeso:65,refs:4,restr:[],dislikes:[],caneta:false,formula:'auto',dadosEm:new Date().toISOString()};
   const di=gerarDieta(d),pegar=(re)=>{const f=FOODS.find(x=>re.test(x.n));return f&&f.id;};
   const trocar=(me,titulo,itens,foto,preparo)=>{const its=itens.filter(i=>F[i[0]]).map(i=>({f:i[0],g:i[1]}));if(its.length>=3){me.itens=its;me.titulo=titulo;me.foto=foto;me.preparo=preparo;me.prato=null;me.bibId=undefined;me.editado=true;}};
-  const alm=di.meals.find(m=>m.tipo==='almoco'),jan=di.meals.find(m=>m.tipo==='jantar');
+  const dh=di.dias[hojeIdx()],alm=dh.find(m=>m.tipo==='almoco'),jan=dh.find(m=>m.tipo==='jantar');
   if(alm)trocar(alm,'Arroz, frango grelhado, abobrinha e cenoura',[['arrozbranco',100],['frango',120],['abobrinha',60],['cenoura',50],['azeite',4]],'imagens/refeicoes/alm-arroz-frango.jpg','Frango temperado com alho, limão e páprica, grelhado ou na airfryer. Abobrinha e cenoura refogadas no azeite com cebola e alho.');
   if(jan)trocar(jan,'Batata assada, merluza, abobrinha grelhada e salada',[['batatainglesa',150],['peixe',120],['abobrinha',60],['rucula',20],['alface',20],['azeite',4]],'imagens/refeicoes/alm-batata-merluza.jpg','Batata em pedaços assada no forno ou na airfryer até dourar. Merluza assada com limão e pimenta. Abobrinha em rodelas grelhada. Salada de rúcula e alface.');
   di.status='aprovada';di.nota='Esta é uma paciente de exemplo, para você ver como o app aparece no celular.';
