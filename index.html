@@ -780,6 +780,18 @@ body{overflow-x:clip}
 .mstrip .addbox input,.mstrip .mcard-b textarea{background:#fff;border:1px solid #ececea;border-radius:10px;font-size:13px;padding:9px 12px}
 .mstrip .addbox .mini{font-size:11.5px;background:transparent;color:#9a9597}
 .mstrip .mcard-b textarea{min-height:0;color:#4a4244}
+
+/* ===== Visão da semana ===== */
+.semc{padding:14px 0 12px;background:#fff;box-shadow:none;border:0;border-top:1px solid #ececea;border-bottom:1px solid #ececea;border-radius:0}.semc .sem-h{padding:0 0 8px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}.semc .sem-h b{font-size:15px}.semc .sem-h span{font-size:12px;color:#8b8587}
+.sem-av{display:flex;flex-direction:column;gap:6px;align-items:flex-start;background:#fff;border:1px solid #ececea;box-shadow:none}.sem-av b{font-size:14.5px}.sem-av span{font-size:13px;color:#7a7476}
+.semw{overflow-x:auto;padding:0 0 4px;margin-right:-16px;padding-right:16px}
+.sem-t{border-collapse:separate;border-spacing:6px;min-width:100%;table-layout:fixed}
+.sem-t th{font-size:12px;font-weight:600;color:#8b8587;text-align:center;padding:6px 4px;cursor:pointer;border-radius:10px}.sem-t th.on{background:#713C43;color:#fff}.sem-t th.hj:after{content:" •";color:#7f9b78}.sem-t th.on.hj:after{color:#cfe0c8}
+.sem-t th.rl{text-align:left;width:74px;color:#6b6567;cursor:default;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+.sem-t td{background:#f7f7f7;border-radius:10px;padding:8px 9px;vertical-align:top;cursor:pointer;width:130px;min-width:120px}.sem-t td:hover{background:#efeaea}.sem-t td.on{background:#f3e9ea}
+.sem-t td b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;font-weight:500;color:#3f2227;line-height:1.3}
+.sem-t td small{display:block;margin-top:3px;font-size:11px;color:#9a9597}
+.sem-t tr.tot td{background:transparent;cursor:default;padding-top:6px;border-top:1px solid #ececea;border-radius:0}.sem-t tr.tot td b{font-weight:700;color:#713C43;-webkit-line-clamp:1}
 </style>
 </head>
 <body>
@@ -1430,9 +1442,14 @@ const DIAS_SEM=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const hojeIdx=()=>(new Date().getDay()+6)%7;
 const diasOk=d=>!!(d&&Array.isArray(d.dias)&&d.dias.length===7);
 function syncAtivo(){if(diasOk(dieta))dieta.dias[dieta.dia||0]=dieta.meals;}
-function gerarDieta(p){
+function gerarDieta(p,dia0){
   const meta=metas(p),evitar={},dias=[];
   for(let k=0;k<7;k++){
+    if(k===0&&dia0){ /* mantém o dia que já existe como o primeiro e evita repeti-lo nos outros */
+      const ms=JSON.parse(JSON.stringify(dia0));
+      ms.forEach(me=>{const c=chaveDe(me),b=me.bibId&&BIB.find(x=>x.id===me.bibId);(evitar[c]=evitar[c]||new Set()).add(b?(b.grupo||b.id):me.titulo);});
+      dias.push({status:'pendente',geradaEm:hoje(),meta,nota:'',meals:ms});continue;
+    }
     const usados=new Set();
     const dia={status:'pendente',geradaEm:hoje(),meta,nota:'',meals:distDe(p).map(([c,t,pc])=>{
       const ev=(evitar[c]=evitar[c]||new Set());
@@ -1455,6 +1472,35 @@ function setDia(i){
   dieta.dia=i;dieta.meals=dieta.dias[i];mealSel=0;
 }
 const chipsDias=fn=>diasOk(dieta)?`<div class="dchips">${DIAS_SEM.map((n,i)=>`<button class="${i===(dieta.dia||0)?'on':''}${i===hojeIdx()?' hj':''}" onclick="${fn}(${i})">${n}</button>`).join('')}</div>`:'';
+
+/* ===== Visão da semana: refeições em linhas, dias em colunas ===== */
+const CURTO={cafe:'Café',lanchem:'Colação',almoco:'Almoço',lanche:'Lanche',jantar:'Jantar',ceia:'Ceia'};
+function semanaCard(){
+  if(!diasOk(dieta)){
+    return `<div class="card sem-av"><b>Esta dieta tem só 1 dia.</b><span>Ela foi criada antes da semana de 7 dias. Posso montar os outros 6 dias, mantendo este dia como a segunda-feira.</span><button class="mini" onclick="montarSemana()">Montar a semana</button></div>`;
+  }
+  syncAtivo();
+  const D=dieta.dias,n=D[0].length,ativo=dieta.dia||0,hj=hojeIdx();
+  let h=`<div class="card semc"><div class="sem-h"><b>Semana</b><span>Toque numa refeição para abrir e editar</span></div><div class="semw"><table class="sem-t"><thead><tr><th></th>${DIAS_SEM.map((d,i)=>`<th class="${i===ativo?'on':''}${i===hj?' hj':''}" onclick="admDia(${i})">${d}</th>`).join('')}</tr></thead><tbody>`;
+  for(let r=0;r<n;r++){
+    const c=chaveDe(D[0][r]);
+    h+=`<tr><th class="rl">${CURTO[c]||D[0][r].nome}</th>${D.map((ms,i)=>{const m=ms[r];if(!m)return '<td></td>';return `<td class="${i===ativo?'on':''}" onclick="abrirCel(${i},${r})"><b>${esc(m.titulo)}</b><small>${Math.round(totais(m).k)} kcal</small></td>`;}).join('')}</tr>`;
+  }
+  h+=`<tr class="tot"><th class="rl">Dia</th>${D.map((ms,i)=>{const t=ms.reduce((a,m)=>{const x=totais(m);a.k+=x.k;a.p+=x.p;return a},{k:0,p:0});return `<td class="${i===ativo?'on':''}"><b>${Math.round(t.k)} kcal</b><small>${Math.round(t.p)} g de proteína</small></td>`;}).join('')}</tr></tbody></table></div></div>`;
+  return h;
+}
+function abrirCel(d,r){
+  setDia(d);admAb=new Set([0]);save('dieta',dieta);save('trocas',trocas);renderAdmin();
+  setTimeout(()=>{const c=document.querySelectorAll('.mstrip details.mcard')[r];if(c)c.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});},120);
+}
+async function montarSemana(){
+  ask('Montar os 7 dias? Este dia vira a segunda-feira, com as suas edições, e os outros 6 dias são novos, sem repetir as refeições.',async()=>{
+    if(!BIB.length)await bibCarregar();
+    const st=dieta.status,nota=dieta.nota,dia0=dieta.meals;
+    const nova=gerarDieta(dados,dia0);nova.status=st;nova.nota=nota;
+    dieta=nova;trocas={};save('dieta',dieta);save('trocas',trocas);logH('edicao','Semana de 7 dias montada a partir do dia que já existia.');renderAdmin();
+  });
+}
 function selDia(i){window._diaEsc=true;setDia(i);save('dieta',dieta);save('trocas',trocas);renderDieta();}
 function admDia(i){setDia(i);admAb=new Set([0]);save('dieta',dieta);renderAdmin();}
 
@@ -1976,7 +2022,7 @@ function renderAdmin(){
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
-  h+=chipsDias('admDia')+'<div class="mnav"><span>Role para o lado para ver as outras refeições</span><button onclick="faixa(-1)" aria-label="Anterior">‹</button><button onclick="faixa(1)" aria-label="Próxima">›</button></div><div class="mstrip">';
+  h+=semanaCard()+chipsDias('admDia')+'<div class="mnav"><span>Role para o lado para ver as outras refeições</span><button onclick="faixa(-1)" aria-label="Anterior">‹</button><button onclick="faixa(1)" aria-label="Próxima">›</button></div><div class="mstrip">';
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
     h+=`<details class="mcard" open><summary onclick="event.preventDefault()"><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
@@ -2691,7 +2737,7 @@ function semearDemo(){
 function faixa(d){const st=document.querySelector('.mstrip');if(st)st.scrollBy({left:d*410,behavior:'smooth'});}
 function ajustaFaixa(){
   const W=document.documentElement.clientWidth;
-  document.querySelectorAll('.mstrip').forEach(st=>{
+  document.querySelectorAll('.mstrip,.semc').forEach(st=>{
     st.style.marginLeft=st.style.marginRight=st.style.paddingLeft=st.style.paddingRight='';
     const r=st.parentElement.getBoundingClientRect();
     st.style.marginLeft=(-r.left)+'px';st.style.marginRight=(-(W-r.right))+'px';
