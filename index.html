@@ -724,25 +724,15 @@ body.claro .mcard,body.claro .card{box-shadow:0 1px 3px rgba(74,21,34,.05)}
 .pk-b{margin-top:6px}.pk-b .act.main{padding:7px 16px;font-size:13px;font-weight:500}
 body.claro .pk{background:#fff}
 
-/* ===== Painel lateral ===== */
-.drw{position:fixed;inset:0;z-index:200;pointer-events:none}.drw.on{pointer-events:auto}
-.drw-bg{position:absolute;inset:0;background:rgba(30,26,28,.32);opacity:0;transition:opacity .25s}.drw.on .drw-bg{opacity:1}
-.drw-p{position:absolute;top:0;right:0;bottom:0;width:min(430px,100%);background:#fafafa;box-shadow:-12px 0 40px rgba(30,26,28,.18);transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
-.drw.on .drw-p{transform:none}
-.drw-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e8e8e6;background:#fff}.drw-top b{font-size:15px;font-weight:600;color:#2b2326}
-.drw-c,.drw-o{background:none;color:#713C43;font-size:14.5px;font-weight:500;padding:6px 4px;min-height:0}.drw-c{color:#8b8587}.drw-o{font-weight:700}
-.drw-b{flex:1;overflow-y:auto;padding:16px 16px 40px;-webkit-overflow-scrolling:touch}
-.drw-atual{background:#fff;border:1px solid #ececea;border-radius:16px;padding:13px 15px}.drw-atual small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9a9597}.drw-atual b{display:block;font-size:16px;margin-top:2px}.drw-atual span{display:block;font-size:12.5px;color:#8b8587;margin-top:1px}.drw-atual .mcp{margin-top:8px}
-.drw-l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9a9597;margin:18px 4px 8px}
-.rw{background:#fff;border:1px solid #ececea;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}.rw:hover{border-color:#d3c4c6}
-.rw.on{border-color:#713C43;box-shadow:0 0 0 1px #713C43 inset}
-.rw-h{display:flex;justify-content:space-between;align-items:center;gap:10px}.rw-h b{display:block;font-size:14.5px;font-weight:600}.rw-h span{display:block;font-size:12.5px;color:#8b8587;margin-top:1px}
-.rw-ck{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid #cfcdcd;position:relative}.rw.on .rw-ck{background:#713C43;border-color:#713C43}.rw.on .rw-ck:after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)}
-.rw-d{margin-top:9px;padding-top:9px;border-top:1px solid #efefed}.rw-d .mcp{margin:0}.rw-d>span{display:block;font-size:12px;color:#8b8587;margin-top:6px}
-
-/* fundo cinza claro */
-body{background:linear-gradient(180deg,#f8f8f7 0%,#f2f2f1 60%,#ecece9 100%) fixed!important}
-body.claro{background:#fbfbfa!important}
+/* ===== Bloco compacto de alterações ===== */
+.pop{background:#fff;border:1px solid #e6e6e4;border-radius:14px;box-shadow:0 10px 28px rgba(30,26,28,.12);margin-top:8px;overflow:hidden;animation:popin .15s ease-out}
+@keyframes popin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pop>input{width:100%;border:0;border-bottom:1px solid #efefed;border-radius:0;background:#fafafa;padding:11px 14px;font-size:14px;margin:0}
+.pop-l{max-height:236px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pop-i{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #efefed;padding:10px 14px;border-radius:0;min-height:0!important;color:#3f2227}
+.pop-i:last-child{border-bottom:0}.pop-i:hover{background:#f6f3f3}
+.pop-i b{display:block;font-size:14px;font-weight:600}.pop-i small{display:block;font-size:12px;color:#8b8587;margin-top:1px}.pop-i em{font-style:normal;font-size:12.5px;color:#8b8587;white-space:nowrap}
+.pop-i .mcp{margin-top:5px}.pop-v{padding:12px 14px;font-size:13px;color:#8b8587}
 </style>
 </head>
 <body>
@@ -1918,10 +1908,10 @@ function renderAdmin(){
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
       h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><em class="ms">${curta(f,it.g)}</em></div><div class="il-p">${pil(k,pp,cc,gg,1)}</div>
-        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii})">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" data-pop onclick="trocarItem(${mi},${ii})">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi})">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" data-pop onclick="bibPainel(${mi})">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
 </div></details>`;
   });
@@ -2048,7 +2038,8 @@ async function bibSalvar(mi){
   logH('edicao',me.nome+': salvou "'+e.nome+'" na biblioteca');aviso('Refeição salva na biblioteca.');
 }
 function bibPainel(mi){
-  drwAbrir('Alterar a refeição',`<input id="bq${mi}" placeholder="Buscar por nome ou alimento, ex.: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off" style="margin-bottom:10px"><div id="bl${mi}" class="res" style="display:block"></div>`);
+  const o=$('bib'+mi),aberto=o.innerHTML;popFechar();if(aberto)return;
+  o.innerHTML=`<div class="pop"><input id="bq${mi}" placeholder="Buscar por nome ou alimento, ex.: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="pop-l"></div></div>`;
   bibLista(mi);
 }
 function bibLista(mi){
@@ -2057,33 +2048,21 @@ function bibLista(mi){
   const serve=b=>!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg));
   const ws=q.split(/[\s,]+/).filter(Boolean),nomesDe=b=>b.itens.map(i=>(F[i.f]||(b.extras||[]).find(x=>x.id===i.f)||{}).n||'').filter(Boolean);
   const l=BIB.filter(b=>serve(b)&&(!ws.length||ws.every(w=>semAc(b.nome+' '+b.tipo+' '+nomesDe(b).join(' ')).includes(w)))).sort((a,b)=>(b.tipo===me.nome)-(a.tipo===me.nome));
-  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)}</small>${pil(t.k,t.p,t.c,t.g)}${ws.length&&!ws.every(w=>semAc(b.nome).includes(w))?`<small>com ${esc(nomesDe(b).filter(n=>ws.some(w=>semAc(n).includes(w))).join(', '))}</small>`:''}</span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
+  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="pop-i" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)}${ws.length&&!ws.every(w=>semAc(b.nome).includes(w))?' · com '+esc(nomesDe(b).filter(n=>ws.some(w=>semAc(n).includes(w))).join(', ')):''}</small>${pil(t.k,t.p,t.c,t.g)}</span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
 }
 
 /* ===== Trocar um alimento dentro da refeição (vale só para esta dieta) ===== */
-/* Painel lateral que desliza da direita, como no iPhone */
-function drwAbrir(titulo,html,okTxt,okFn){
-  let d=$('drw');
-  if(!d){d=document.createElement('div');d.id='drw';d.className='drw';d.innerHTML='<div class="drw-bg" onclick="drwFechar()"></div><div class="drw-p"><div class="drw-top"><button class="drw-c" onclick="drwFechar()">Cancelar</button><b id="drwT"></b><button class="drw-o" id="drwOk"></button></div><div class="drw-b" id="drwB"></div></div>';document.body.appendChild(d);document.addEventListener('keydown',e=>{if(e.key==='Escape')drwFechar();});}
-  $('drwT').textContent=titulo;$('drwB').innerHTML=html;$('drwB').scrollTop=0;
-  const ok=$('drwOk');ok.textContent=okTxt||'';ok.style.visibility=okFn?'visible':'hidden';ok.onclick=okFn||null;
-  void d.offsetWidth;d.classList.add('on');document.body.style.overflow='hidden';
-}
-function drwFechar(){const d=$('drw');if(d){d.classList.remove('on');document.body.style.overflow='';}}
-const PK={};let drwI=0;
+/* Bloco compacto de alterações, como o menu do iPhone */
+const PK={};
+function popFechar(){document.querySelectorAll('.pop').forEach(e=>e.remove());}
+document.addEventListener('click',e=>{if(!e.target.closest('.pop')&&!e.target.closest('[data-pop]'))popFechar();});
 function trocarItem(mi,ii){
-  const me=dieta.meals[mi],it=me.itens[ii],f=F[it.f],subs=substituicoes(it,me.tipo,dados);PK[mi+'_'+ii]=subs;drwI=0;
-  const k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
-  if(!subs.length){drwAbrir('Alterar alimento',`<div class="drw-atual"><small>Agora</small><b>${esc(f.n)}</b></div><div class="sub" style="padding:14px 4px">Não há opções de troca para este alimento. Use "Buscar alimento" para adicionar outro e depois remova este.</div>`);return;}
-  drwAbrir('Alterar alimento',`<div class="drw-atual"><small>Agora</small><b>${esc(f.n)}</b><span>${Math.round(it.g)} g · ${curta(f,it.g)}</span>${pil(k,pp,cc,gg,1)}</div><div class="drw-l">Escolha o novo alimento</div><div id="drwL"></div>`,'Usar',()=>pkOk(mi,ii));
-  drwLista(mi,ii);
+  const o=$('ti'+mi+'_'+ii),aberto=o.innerHTML;popFechar();if(aberto)return;
+  const me=dieta.meals[mi],it=me.itens[ii],subs=substituicoes(it,me.tipo,dados);PK[mi+'_'+ii]=subs;
+  o.innerHTML=subs.length?`<div class="pop"><div class="pop-l">${subs.map((x,i)=>`<button class="pop-i" onclick="popUsa(${mi},${ii},${i})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]}</small></span><em>${Math.round(x.x.k*x.g/100)} kcal</em></button>`).join('')}</div></div>`
+    :`<div class="pop"><div class="pop-v">Sem opções de troca para este alimento. Use "Buscar alimento" para adicionar outro e depois remova este.</div></div>`;
 }
-function drwLista(mi,ii){
-  const subs=PK[mi+'_'+ii];
-  $('drwL').innerHTML=subs.map((x,i)=>`<div class="rw${i===drwI?' on':''}" onclick="drwSel(${mi},${ii},${i})"><div class="rw-h"><div><b>${esc(x.x.n)}</b><span>${x.g} g · ${x.txt.split(' - ')[0]}</span></div><i class="rw-ck"></i></div>${i===drwI?`<div class="rw-d">${pil(x.x.k*x.g/100,x.x.p*x.g/100,x.x.c*x.g/100,x.x.g*x.g/100)}${x.dif?`<span>${x.dif}</span>`:''}</div>`:''}</div>`).join('');
-}
-function drwSel(mi,ii,i){drwI=i;drwLista(mi,ii);}
-function pkOk(mi,ii){const x=PK[mi+'_'+ii][drwI];drwFechar();aplicarTroca(mi,ii,x.id,x.g);}
+function popUsa(mi,ii,i){const x=PK[mi+'_'+ii][i];popFechar();aplicarTroca(mi,ii,x.id,x.g);}
 function aplicarTroca(mi,ii,id,g){
   const me=dieta.meals[mi],it=me.itens[ii],velho=F[it.f],novo=F[id];if(!novo)return;
   const pri=n=>n.split(' ')[0].toLowerCase();
@@ -2095,7 +2074,7 @@ function aplicarTroca(mi,ii,id,g){
 }
 function bibAplicar(mi,id){
   const b=BIB.find(x=>x.id===id);if(!b)return;const me=dieta.meals[mi];
-  ask('Alterar "'+me.titulo+'" para "'+b.nome+'"? Os alimentos e quantidades desta refeição serão substituídos.',()=>{drwFechar();
+  ask('Alterar "'+me.titulo+'" para "'+b.nome+'"? Os alimentos e quantidades desta refeição serão substituídos.',()=>{popFechar();
     (b.extras||[]).forEach(f=>{if(!F[f.id]){FOODS.push(f);F[f.id]=f;EXTRAS.push(f);}});save('extras',EXTRAS);
     const itens=b.itens.filter(i=>F[i.f]);
     me.itens=itens.map(i=>({f:i.f,g:i.g}));me.titulo=b.titulo;me.desc=b.desc;
