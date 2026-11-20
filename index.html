@@ -712,6 +712,17 @@
 body.claro{background:#fbf8f4!important;--card:#ffffff;--field:#f6f1ea;--line:#eee7dc}
 body.claro .card,body.claro .mcard,body.claro .il{background:#fff}
 body.claro .mcard,body.claro .card{box-shadow:0 1px 3px rgba(74,21,34,.05)}
+
+.mpeso{display:flex;justify-content:space-between;align-items:baseline;background:#f6f0e6;border-radius:14px;padding:11px 14px;margin-top:10px}.mpeso span{font-size:13px;color:#7a6a60}.mpeso b{font-size:17px;color:#3f2227}.mpeso.alvo{background:#eef0e2}.mpeso.alvo b{color:#4f5a33}
+.rit{display:flex;gap:6px;align-items:center}.rit input{width:70px;padding:7px 9px;font-size:14px;text-align:center}
+/* seletor mais leve */
+.pk{background:#fff;border:1px solid #efe6d9;border-radius:16px;padding:6px 14px 12px;margin-top:8px}
+.pk-w,.pk-l{height:132px}.pk-l{padding:44px 0}
+.pk-band{top:44px;height:44px;border-radius:0;background:transparent;border-top:1px solid #e6dccb;border-bottom:1px solid #e6dccb}
+.pk-i{font-size:15px;color:#b9aea6;font-weight:400}.pk-i.on{font-size:16px;font-weight:500;color:#3f2227}
+.pk-d{min-height:50px;gap:5px;margin-top:2px}.pk-q{font-size:12px;color:#a0948a}
+.pk-b{margin-top:6px}.pk-b .act.main{padding:7px 16px;font-size:13px;font-weight:500}
+body.claro .pk{background:#fff}
 </style>
 </head>
 <body>
@@ -739,8 +750,9 @@ body.claro .mcard,body.claro .card{box-shadow:0 1px 3px rgba(74,21,34,.05)}
       <label>Meu objetivo (depois posso ajustar na aba Objetivo)</label>
       <select id="obj" onchange="formMeta()"><option value="emagrecer">Emagrecer</option><option value="ganhar">Ganhar peso / massa muscular</option><option value="manter">Manter o peso / aumentar massa magra</option></select>
       <div id="metaBox" style="display:none">
+        <div class="mpeso"><span>Meu peso atual</span><b id="metaAtual">-</b></div>
         <label id="metaKgL">Quantos quilos eu quero perder</label><input id="metaKg" type="text" inputmode="decimal" step="0.5" min="0" oninput="formMeta(1)">
-        <label>Em quantos dias</label><input id="metaDias" type="text" inputmode="numeric" step="10" min="30" oninput="formMeta(1)">
+        <div class="mpeso alvo"><span>Meu peso desejado</span><b id="metaAlvo">-</b></div>
         <div class="info" id="metaMsg"></div>
       </div>
       <label>Quantas refeições eu costumo fazer por dia</label>
@@ -1147,6 +1159,8 @@ function elegiveis(grp,m,p,sub){return FOODS.filter(f=>f.grp===grp&&(!f.m||!m||f
    Objetivo: p.obj = 'emagrecer' | 'manter' | 'ganhar'; p.ajuste = déficit ou superávit em kcal. */
 /* 1 kg de gordura corporal ≈ 7.110 kcal (1 kg em 30 dias = 237 kcal por dia) */
 const KCAL_KG=7110;
+/* Ritmo padrão do plano (kcal por dia), sugestão que a nutricionista ajusta por cliente na Revisão */
+const RITMO={emagrecer:500,ganhar:300};
 function imcDe(p){return p.peso/Math.pow(p.altura/100,2);}
 /* Regras para quem usa caneta emagrecedora (ajuste aqui os números): a saciedade limita o quanto a pessoa consegue comer,
    então o piso de calorias é menor, a proteína tem prioridade e as porções dos modelos mudam pouco. */
@@ -1383,13 +1397,15 @@ function formMeta(tocou){
   const ob=$('obj').value,on=ob==='emagrecer'||ob==='ganhar',p=formPessoa();box.style.display=on?'block':'none';
   if(!on)return;
   $('metaKgL').textContent=ob==='ganhar'?'Quantos quilos eu quero ganhar':'Quantos quilos eu quero perder';
-  if(!(p.peso>0&&p.altura>0&&p.idade>0))return;
-  if(window._objAnt!==ob){window._objAnt=ob;metaTocada=false;}
-  if(tocou)metaTocada=true;
-  if(!metaTocada){const sg=ob==='ganhar'?sugestaoGanho(p):sugestaoPerda(p);$('metaKg').value=sg.kg;$('metaDias').value=sg.dias;}
-  const c=ob==='ganhar'?calcGanho($('metaKg').value,$('metaDias').value,p):calcPerda($('metaKg').value,$('metaDias').value,p),el=$('metaMsg');
-  el.className=c.erro&&c.erro!=='vazio'?'alert':'info';
-  el.textContent=c.erro==='vazio'?`Informe quantos quilos quer ${ob==='ganhar'?'ganhar':'perder'} e em quantos dias.`:c.erro||`Meta: ${ob==='ganhar'?'ganhar':'perder'} ${br(c.kg)} kg em ${c.dias} dias. Sugestão segura pré-preenchida; você pode ajustar dentro do limite saudável.`;
+  const kg=+String($('metaKg').value).replace(',','.')||0,peso=p.peso||0,el=$('metaMsg');
+  $('metaAtual').textContent=peso>0?br(r1(peso))+' kg':'-';
+  const alvo=ob==='ganhar'?peso+kg:peso-kg;
+  $('metaAlvo').textContent=peso>0&&kg>0?br(r1(alvo))+' kg':'-';
+  el.className='info';
+  if(!(kg>0))el.textContent=`Informe quantos quilos quer ${ob==='ganhar'?'ganhar':'perder'}. A nutricionista vai conferir a sua meta.`;
+  else if(alvo<=0)el.textContent='Confira o valor informado.';
+  else if(p.altura>0&&alvo/Math.pow(p.altura/100,2)<18.5)el.textContent='Esse peso ficaria abaixo do considerado saudável. A nutricionista vai avaliar a sua meta com você.';
+  else el.textContent='Está anotado. A nutricionista vai conferir a sua meta.';
 }
 ['peso','altura','idade','sexo','atv'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',()=>formMeta()); });
 function salvarDados(){
@@ -1402,23 +1418,17 @@ function salvarDados(){
   if(!(novo.idade>=18)){alert('Por enquanto eu atendo apenas pessoas com 18 anos ou mais.');return;}
   if(!(novo.peso>0&&novo.altura>0)){alert('Confira seu peso e sua altura.');return;}
   if(dieta&&dieta.status==='aprovada'&&!window._ok1){ask('Sua dieta atual já foi aprovada. Enviar novos dados gera uma nova dieta para eu revisar. Continuar?',()=>{window._ok1=1;salvarDados();window._ok1=0});return;}
-  if(novo.obj==='emagrecer'){
-    const c=calcPerda($('metaKg').value,$('metaDias').value,novo);
-    if(c.erro){alert(c.erro==='vazio'?'Informe quantos quilos quer perder e em quantos dias.':c.erro);return;}
-    novo.metaKg=c.kg;novo.metaDias=c.dias;novo.ajuste=c.def;
-    if(metas(novo).bloq){const b=baseEnergia(novo);novo.ajuste=Math.max(0,Math.floor((b.get-PISO(novo))/50)*50);alert('Pelo seu perfil, o prazo escolhido levaria a uma dieta abaixo do mínimo seguro. Eu ajustei o déficit para o limite seguro, então o prazo será maior.');}
-  }
-  else if(novo.obj==='ganhar'){
-    const c=calcGanho($('metaKg').value,$('metaDias').value,novo);
-    if(c.erro){alert(c.erro==='vazio'?'Informe quantos quilos quer ganhar e em quantos dias.':c.erro);return;}
-    novo.metaKg=c.kg;novo.metaDias=c.dias;novo.ajuste=c.def;
+  if(novo.obj==='emagrecer'||novo.obj==='ganhar'){
+    const kg=+String($('metaKg').value).replace(',','.')||0;
+    if(!(kg>0)){alert(`Informe quantos quilos você quer ${novo.obj==='ganhar'?'ganhar':'perder'}.`);return;}
+    novo.metaKg=kg;novo.metaPeso=r1(novo.obj==='ganhar'?novo.peso+kg:novo.peso-kg);novo.ajuste=RITMO[novo.obj];
   }
   novo.dadosEm=new Date().toISOString();
   dados=novo;objD=null;save('dados',dados);nomeRascunho=novo.nome;save('nome',nomeRascunho);
   dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;
   if(!pesos.some(x=>x.d===hoje())){pesos.push({d:hoje(),kg:dados.peso});save('pesos',pesos);}
   checks={};save('checks',checks);
-  logH('dados','Cliente enviou os dados: '+({emagrecer:'emagrecer',ganhar:'ganhar massa',manter:'manter o peso'})[dados.obj]+(dados.metaKg?', meta de '+br(dados.metaKg)+' kg em '+dados.metaDias+' dias':'')+'; '+dados.peso+' kg, '+dados.altura+' cm.');
+  logH('dados','Cliente enviou os dados: '+({emagrecer:'emagrecer',ganhar:'ganhar massa',manter:'manter o peso'})[dados.obj]+(dados.metaKg?', meta de '+br(dados.metaKg)+' kg (peso desejado '+br(dados.metaPeso||0)+' kg)':'')+'; '+dados.peso+' kg, '+dados.altura+' cm.');
   logH('dieta','Dieta gerada automaticamente ('+dieta.meta.kcal+' kcal de meta).');
   tab('dieta');
 }
@@ -1554,58 +1564,18 @@ function renderGrafico(){
 /* ===== Meu objetivo ===== */
 let objD=null;
 const PRESETS={emagrecer:[300,500,700],ganhar:[200,300,500]};
-function objInit(){objD={obj:dados.obj,val:dados.ajuste||0,unit:'kcal',kg:dados.metaKg||'',dias:dados.metaDias||''};}
-/* Meta de perda: ritmo máximo de 2 kg por mês (ou 3% do peso, o que for maior),
-   no máximo 30% do gasto total em déficit, e IMC final não inferior a 18,5. */
-const RITMO_MAX=.005;
-function calcPerda(kg,dias,p){
-  kg=+String(kg).replace(',','.')||0; dias=Math.round(+dias)||0;
-  const peso=p.peso, get=baseEnergia({...p,obj:'emagrecer'}).get;
-  const minDias=kg>0?Math.max(30,Math.ceil(kg/Math.max(2,peso*.03)*30)):0;
-  const imcFim=(peso-kg)/Math.pow(p.altura/100,2);
-  const maxKg=Math.max(0,Math.floor((peso-18.5*Math.pow(p.altura/100,2))*2)/2);
-  let erro='';
-  if(!kg||!dias)erro='vazio';
-  else if(imcFim<18.5)erro=`Com essa perda o seu IMC ficaria abaixo de 18,5, que é considerado baixo peso. A perda máxima para você é de ${br(maxKg)} kg.`;
-  else if(dias<minDias)erro=`Perder ${br(kg)} kg em ${dias} dias é rápido demais para ser saudável. Para essa meta, o prazo mínimo é de ${minDias} dias (cerca de ${Math.round(minDias/30)} meses). Aumente o prazo ou diminua os quilos.`;
-  const def=kg&&dias?Math.round(kg*KCAL_KG/dias):0;
-  if(!erro&&def>get*.3)erro='O déficit necessário passa de 30% do seu gasto diário. Aumente o prazo ou diminua os quilos.';
-  return {kg,dias,minDias,def,erro,maxKg};
-}
-/* Meta de ganho: superávit = kg x 7110 / dias, no máximo 500 kcal por dia (cerca de 0,5 kg por semana) */
-const SUPERAVIT_MAX=500;
-function calcGanho(kg,dias,p){
-  kg=+String(kg).replace(',','.')||0;dias=Math.round(+dias)||0;
-  const sup=kg&&dias?Math.round(kg*KCAL_KG/dias):0,minDias=kg>0?Math.ceil(kg*KCAL_KG/SUPERAVIT_MAX/10)*10:0;
-  let erro='';
-  if(!kg||!dias)erro='vazio';
-  else if(sup>SUPERAVIT_MAX)erro=`Ganhar ${br(kg)} kg em ${dias} dias é rápido demais para ganhar com qualidade. Para essa meta, o prazo mínimo é de ${minDias} dias. Aumente o prazo ou diminua os quilos.`;
-  else if(sup<80)erro='Esse ganho em tanto tempo é muito pequeno. Diminua o prazo ou aumente os quilos.';
-  return {kg,dias,minDias,def:sup,erro};
-}
-function sugestaoGanho(p){const kg=Math.max(1,Math.round(p.peso*.03*2)/2);return {kg,dias:Math.max(60,Math.ceil(kg*KCAL_KG/300/10)*10)};}
-/* Sugestão pré-definida: cerca de 5% do peso (máx. 1 kg a cada 15 dias), em prazo seguro de pelo menos 90 dias */
-function sugestaoPerda(p){
-  const kg=Math.max(1,Math.round(p.peso*.05*2)/2);
-  const dias=Math.max(90,Math.ceil(calcPerda(kg,30,p).minDias/10)*10);
-  return {kg,dias};
-}
-function metaPerda(){return calcPerda(objD.kg,objD.dias,dados);}
-function metaGanho(){return calcGanho(objD.kg,objD.dias,dados);}
+function objInit(){objD={obj:dados.obj,val:dados.ajuste||0,unit:'kcal',kg:dados.metaKg||''};}
 function objAjuste(){
   if(objD.obj==='manter')return 0;
-  if(objD.obj==='ganhar'){const mg=metaGanho();return mg.erro?0:mg.def;}
-  if(objD.obj==='emagrecer'){const mp=metaPerda();return mp.erro?0:mp.def;}
-  const get=baseEnergia({...dados,obj:objD.obj}).get;
-  return objD.unit==='%'?Math.round(get*(+objD.val||0)/100):Math.round(+objD.val||0);
+  return (dados.obj===objD.obj&&dados.ajuste>0)?dados.ajuste:RITMO[objD.obj];
 }
-function setObjModo(m){objD.obj=m;objD.unit='kcal';objD.val=m==='emagrecer'?500:m==='ganhar'?300:0;if(m==='ganhar'){const sg=sugestaoGanho(dados);if(!objD.kg||dados.obj!=='ganhar'){objD.kg=sg.kg;objD.dias=sg.dias;}objD.val=metaGanho().def;}if(m==='emagrecer'&&objD.kg&&objD.dias)objD.val=metaPerda().def;renderObjetivo();}
-function setMeta(k,v){objD[k]=v;const mp=objD.obj==='ganhar'?metaGanho():metaPerda();objD.val=mp.erro?0:mp.def;renderObjetivo();}
+function setObjModo(m){objD.obj=m;if(m!=='emagrecer'&&m!=='ganhar')objD.kg='';renderObjetivo();}
+function setMeta(k,v){objD[k]=v;renderObjetivo();}
 function setObjVal(v){objD.val=num(v);renderObjetivo();}
 function setObjUnit(u){objD.unit=u;renderObjetivo();}
 function aplicarObjetivo(){
   const novo={...dados,obj:objD.obj,ajuste:objAjuste()};
-  if(objD.obj==='emagrecer'||objD.obj==='ganhar'){const mp=objD.obj==='ganhar'?metaGanho():metaPerda();if(mp.erro)return;novo.metaKg=mp.kg;novo.metaDias=mp.dias;}else{delete novo.metaKg;delete novo.metaDias;}
+  if(objD.obj==='emagrecer'||objD.obj==='ganhar'){const kg=+String(objD.kg).replace(',','.')||0;if(!(kg>0))return;novo.metaKg=kg;novo.metaPeso=r1(objD.obj==='ganhar'?dados.peso+kg:dados.peso-kg);delete novo.metaDias;}else{delete novo.metaKg;delete novo.metaPeso;delete novo.metaDias;}
   if(metas(novo).bloq)return;
   if(dieta&&dieta.status==='aprovada'&&!window._ok2){ask('Sua dieta atual já foi aprovada. Mudar o objetivo gera uma nova dieta para eu revisar. Continuar?',()=>{window._ok2=1;aplicarObjetivo();window._ok2=0});return;}
   novo.dadosEm=new Date().toISOString();
@@ -1620,38 +1590,24 @@ function renderObjetivo(){
   const aj=objAjuste(),draft={...dados,obj:objD.obj,ajuste:aj},m=metas(draft);
   const nomes={emagrecer:'Emagrecer',ganhar:'Ganhar peso / massa',manter:'Manter / massa magra'};
   let h=`<div class="card"><div class="seg">${['emagrecer','ganhar','manter'].map(k=>`<button class="${objD.obj===k?'on':''}" onclick="setObjModo('${k}')">${nomes[k]}</button>`).join('')}</div>`;
-  if(objD.obj==='emagrecer'){
-    const mp=metaPerda();
-    h+=`<h3 style="margin-top:0">Minha meta de perda</h3>
-    <div class="info" style="margin-top:0">Eu monto o seu plano a partir da sua meta. O ritmo saudável é de até 2 kg por mês (ou 3% do peso, se for maior).</div>
-    <label>Quantos quilos quero perder</label><input type="text" inputmode="decimal" min="0" step="0.5" value="${objD.kg}" placeholder="Ex.: 5" onchange="setMeta('kg',this.value)">
-    <label>Em quantos dias</label><input type="text" inputmode="numeric" min="30" step="10" value="${objD.dias}" placeholder="Ex.: 120" onchange="setMeta('dias',this.value)">
-    <div class="presets">${[30,60,90,120,180].map(v=>`<button class="${+objD.dias===v?'on':''}" onclick="setMeta('dias',${v})">${v} dias</button>`).join('')}</div>`;
-    if(mp.kg>0&&!mp.erro||mp.erro&&mp.erro!=='vazio')h+=mp.erro&&mp.erro!=='vazio'?`<div class="alert">${mp.erro}</div>`:'';
-    if(mp.kg>0&&mp.erro&&mp.erro!=='vazio'&&mp.minDias&&mp.erro.indexOf('IMC')<0)h+=`<button class="light" onclick="setMeta('dias',${mp.minDias})">Usar o prazo mínimo (${mp.minDias} dias)</button>`;
-  }else if(objD.obj==='ganhar'){
-    const mg=metaGanho();
-    h+=`<h3 style="margin-top:0">Minha meta de ganho</h3>
-    <div class="info" style="margin-top:0">Eu calculo o seu plano a partir da meta. Para ganhar com qualidade, o ritmo é de até cerca de 0,5 kg por semana.</div>
-    <label>Quantos quilos quero ganhar</label><input type="text" inputmode="decimal" min="0" step="0.5" value="${objD.kg}" placeholder="Ex.: 2" onchange="setMeta('kg',this.value)">
-    <label>Em quantos dias</label><input type="text" inputmode="numeric" min="30" step="10" value="${objD.dias}" placeholder="Ex.: 90" onchange="setMeta('dias',this.value)">
-    <div class="presets">${[60,90,120,180].map(v=>`<button class="${+objD.dias===v?'on':''}" onclick="setMeta('dias',${v})">${v} dias</button>`).join('')}</div>`;
-    if(mg.erro&&mg.erro!=='vazio')h+=`<div class="alert">${mg.erro}</div>`;
-    if(mg.kg>0&&mg.erro&&mg.erro!=='vazio'&&mg.minDias&&mg.erro.indexOf('pequeno')<0)h+=`<button class="light" onclick="setMeta('dias',${mg.minDias})">Usar o prazo mínimo (${mg.minDias} dias)</button>`;
+  if(objD.obj==='emagrecer'||objD.obj==='ganhar'){
+    const gan=objD.obj==='ganhar',kgv=+String(objD.kg).replace(',','.')||0,alvo=gan?dados.peso+kgv:dados.peso-kgv;
+    h+=`<h3 style="margin-top:0">Minha meta</h3>
+    <div class="mpeso"><span>Meu peso atual</span><b>${br(r1(dados.peso))} kg</b></div>
+    <label>Quantos quilos quero ${gan?'ganhar':'perder'}</label><input type="text" inputmode="decimal" min="0" step="0.5" value="${objD.kg}" placeholder="Ex.: 3" onchange="setMeta('kg',this.value)">
+    <div class="mpeso alvo"><span>Meu peso desejado</span><b>${kgv>0?br(r1(alvo))+' kg':'-'}</b></div>
+    <div class="info">A nutricionista vai conferir a sua meta.</div>`;
   }
   h+=`</div>`;
-  const kg=Math.abs(m.semanal);
+  const kgOk=objD.obj==='manter'||(+String(objD.kg).replace(',','.')>0);
   h+=nutriMode?`<div class="card"><div class="nums">
     <div><span>Gasto basal</span><b>${m.tmb} kcal</b></div><div><span>Gasto total por dia (fator ${br(m.fa)})</span><b>${m.get} kcal</b></div>
     <div class="big"><span>Meta por dia</span><b>${m.kcal} kcal</b></div>
-    <div><span>${objD.obj==='ganhar'?'Ganho estimado':'Variação estimada'} por semana</span><b>${objD.obj==='manter'?'0 kg':(m.semanal>0?'+':'-')+br(kg)+' kg'}</b></div>
     <div><span>Proteína</span><b>${m.prot} g</b><span>${br(m.gkg)} g por kg</span></div></div>
     <div class="info">Cálculo pelo método ${m.metodo}. IMC ${br(m.imc)}.</div>`
-   :`<div class="card">${objD.obj==='manter'?'<p>Seu plano será montado para manter o seu peso atual.</p>':`<p>${objD.obj==='ganhar'?'Ganho':'Perda'} estimada: cerca de <b>${br(kg)} kg por semana</b>.</p>`}`;
-  const mpx=objD.obj==='emagrecer'?metaPerda():null, trav=m.bloq||(mpx&&mpx.erro);
-  if(mpx&&!mpx.erro)h+=`<div class="info">Meta: perder ${br(mpx.kg)} kg em ${mpx.dias} dias${nutriMode?`, com déficit de ${mpx.def} kcal por dia`:''}.</div>`;
-  if(m.bloq)h+=`<div class="alert">${nutriMode?`Essa meta fica abaixo do mínimo seguro de ${PISO(draft)} kcal por dia.`:'Essa meta é intensa demais para o seu perfil.'} Escolha um prazo maior para continuar.</div>`;
-  if(objD.obj==='ganhar')h+=`<div class="info">O ganho semanal é uma estimativa e inclui massa magra e gordura. O resultado depende do seu treino.</div>`;
+   :`<div class="card">${objD.obj==='manter'?'<p>Seu plano será montado para manter o seu peso atual.</p>':''}`;
+  const trav=m.bloq||!kgOk;
+  if(m.bloq)h+=`<div class="alert">${nutriMode?`Essa meta fica abaixo do mínimo seguro de ${PISO(draft)} kcal por dia.`:'Essa meta é intensa demais para o seu perfil.'}</div>`;
   h+=`<button class="full" ${trav?'disabled style="opacity:.4;cursor:not-allowed"':''} onclick="aplicarObjetivo()">Gerar minha dieta com essa meta</button></div>`;
   o.innerHTML=h;
 }
@@ -1755,7 +1711,7 @@ async function renderAdmClientesNuvem(){
   if(!l.length)h+=`<div class="card sand"><p>Nenhuma cliente ainda. Quando uma cliente enviar os dados, ela aparece aqui, de qualquer aparelho.</p></div>`;
   l.forEach(r=>{
     const d=r.dados||{};
-    h+=`<div class="cli" onclick="abrirCliente('${r.id}')"><div class="cli-a">${esc((r.nome||'?').charAt(0).toUpperCase())}</div><div class="cli-n"><b>${esc(r.nome||'Sem nome')}</b><span>${nomeObj[d.obj]||''}${d.metaKg?' · '+br(d.metaKg)+' kg em '+d.metaDias+' dias':''}${r.kcal?' · '+r.kcal+' kcal':''}</span>${r.ult?`<span class="cli-u">${fmtData(new Date(r.ult.t).getTime())} · ${esc(r.ult.txt)}</span>`:''}</div><span class="tag ${r.ok?'l':''}">${r.ok?'aprovada':(r.novo?'dados novos':'em revisão')}</span></div>`;
+    h+=`<div class="cli" onclick="abrirCliente('${r.id}')"><div class="cli-a">${esc((r.nome||'?').charAt(0).toUpperCase())}</div><div class="cli-n"><b>${esc(r.nome||'Sem nome')}</b><span>${nomeObj[d.obj]||''}${d.metaKg?' · meta de '+br(d.metaKg)+' kg':''}${r.kcal?' · '+r.kcal+' kcal':''}</span>${r.ult?`<span class="cli-u">${fmtData(new Date(r.ult.t).getTime())} · ${esc(r.ult.txt)}</span>`:''}</div><span class="tag ${r.ok?'l':''}">${r.ok?'aprovada':(r.novo?'dados novos':'em revisão')}</span></div>`;
   });
   h+=`<div class="card"><button class="full light" onclick="sairNutri()">Sair da área da nutricionista</button></div>`;
   o.innerHTML=h;
@@ -1901,7 +1857,7 @@ function renderAdmClientes_local(){
   if(!l.length)h+=`<div class="card sand"><p>Nenhuma cliente neste aparelho ainda. Quando uma cliente enviar os dados por aqui, ela aparece nesta lista.</p></div>`;
   l.forEach(r=>{
     const d=r.dados||{},ok=r.dieta&&r.dieta.status==='aprovada',ult=(r.hist||[]).slice(-1)[0];
-    h+=`<div class="cli" onclick="abrirCliente('${r.id}')"><div class="cli-a">${esc((r.nome||'?').charAt(0).toUpperCase())}</div><div class="cli-n"><b>${esc(r.nome||'Sem nome')}</b><span>${nomeObj[d.obj]||''}${d.metaKg?' · '+br(d.metaKg)+' kg em '+d.metaDias+' dias':''} · ${r.dieta?r.dieta.meta.kcal+' kcal':'sem dieta'}</span>${ult?`<span class="cli-u">${fmtData(ult.t)} · ${esc(ult.txt)}</span>`:''}</div><span class="tag ${ok?'l':''}">${ok?'aprovada':'em revisão'}</span></div>`;
+    h+=`<div class="cli" onclick="abrirCliente('${r.id}')"><div class="cli-a">${esc((r.nome||'?').charAt(0).toUpperCase())}</div><div class="cli-n"><b>${esc(r.nome||'Sem nome')}</b><span>${nomeObj[d.obj]||''}${d.metaKg?' · meta de '+br(d.metaKg)+' kg':''} · ${r.dieta?r.dieta.meta.kcal+' kcal':'sem dieta'}</span>${ult?`<span class="cli-u">${fmtData(ult.t)} · ${esc(ult.txt)}</span>`:''}</div><span class="tag ${ok?'l':''}">${ok?'aprovada':'em revisão'}</span></div>`;
   });
   h+=`<div class="card"><h3 style="margin-top:0">Backup</h3><div class="sub">As clientes ficam guardadas neste aparelho. Use o backup para guardar uma cópia ou levar para outro aparelho.</div>
    <div class="row" style="margin-top:10px"><button class="light" onclick="copiarBackup()">Copiar backup</button><button class="light" onclick="formImportar()">Importar backup</button></div><div id="bkp" style="margin-top:8px"></div></div>
@@ -1919,11 +1875,12 @@ function renderAdmin(){
   const pc=(a,b)=>Math.round(a/b*100);
   let h=admNav()+`<div class="admsum"><div class="as-top"><div><small>Calorias da dieta</small><b>${Math.round(t.k)}</b><span>kcal · meta ${Math.round(m.kcal)}</span></div><div><small>Proteína</small><b>${Math.round(t.p)}</b><span>g · ${br(r1(t.p/dados.peso))} g/kg</span></div></div><div class="as-mac">${(()=>{const q=macroPct(t);return `<i class="p" style="flex:${q[0]}">PTN ${q[0]}%</i><i class="c" style="flex:${q[1]}">CHO ${q[1]}%</i><i class="g" style="flex:${q[2]}">LIP ${q[2]}%</i>`;})()}</div></div><div class="card rv"><div class="rv-top"><h2>Revisão: ${esc(dados.nome)}</h2><span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></div>
    <div class="cps"><span class="cp">${dados.sexo==='f'?'Feminino':'Masculino'}, ${dados.idade} anos</span><span class="cp">${dados.peso} kg</span><span class="cp">${dados.altura} cm</span><span class="cp">IMC ${br(m.imc)}</span><span class="cp">${dados.refs} refeições</span>${dados.caneta?'<span class="cp pen">Usa caneta</span>':''}${dados.restr.length?`<span class="cp warn">Restrições: ${dados.restr.join(', ')}</span>`:''}${dados.dislikes.length?`<span class="cp warn">Não gosta: ${esc(dados.dislikes.join(', '))}</span>`:''}</div>
-   <div class="cps"><span class="cp ob">${dados.obj==='emagrecer'?'Objetivo: emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'Objetivo: ganhar peso / massa, superávit de '+dados.ajuste+' kcal':'Objetivo: manter o peso / aumentar massa magra'}</span><span class="cp">${dados.metaKg?`Meta: ${dados.obj==='ganhar'?'ganhar':'perder'} ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'Sem meta em quilos'}</span></div>
+   <div class="cps"><span class="cp ob">${dados.obj==='emagrecer'?'Objetivo: emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'Objetivo: ganhar peso / massa, superávit de '+dados.ajuste+' kcal':'Objetivo: manter o peso / aumentar massa magra'}</span><span class="cp">${dados.metaKg?`Meta: ${dados.obj==='ganhar'?'ganhar':'perder'} ${br(dados.metaKg)} kg (peso desejado ${br(dados.metaPeso||r1(dados.obj==='ganhar'?dados.peso+dados.metaKg:dados.peso-dados.metaKg))} kg)`:'Sem meta em quilos'}</span></div>
    ${(t.k<m.kcal*.9||t.k>m.kcal*1.1)?`<div class="alerta"><div><b>${t.k<m.kcal?'Faltam calorias':'Passou da meta'}</b><span>A dieta soma ${Math.round(t.k)} de ${Math.round(m.kcal)} kcal (${Math.round(t.k/m.kcal*100)}% da meta). Você decide se ajusta as quantidades.</span></div></div>`:''}<div id="admGaps"></div>
    ${(dados.sem||[]).length?`<div class="info" style="margin-top:12px">Refeições removidas desta cliente: ${(dados.sem||[]).map(c=>`<b>${L.refeicoes[c]||c}</b> <button class="mini light" onclick="restaurarRefeicao('${c}')">Trazer de volta</button>`).join(' ')}</div>`:''}
    <details class="mais"><summary>Mais opções e cálculo</summary><div class="mo">
     <div class="mo-r"><div><b>Refazer a dieta</b><span>Gera de novo. As edições feitas aqui serão descartadas.</span></div><button class="mini light" onclick="refazerBib()">Refazer</button></div>
+    ${(dados.obj==='emagrecer'||dados.obj==='ganhar')?`<div class="mo-r"><div><b>Ritmo do plano</b><span>${dados.obj==='ganhar'?'Superávit':'Déficit'} diário. Sugestão: ${RITMO[dados.obj]} kcal.</span></div><div class="rit"><input id="ritmoIn" type="text" inputmode="numeric" value="${dados.ajuste||0}"><button class="mini light" onclick="setRitmo()">Salvar</button></div></div>`:''}
     <div class="mo-r"><div><b>Caneta emagrecedora</b><span>${dados.caneta?`Usa. Mínimo de ${PISO(dados)} kcal e proteína em primeiro lugar.`:'Não usa.'}</span></div><button class="mini light" onclick="toggleCaneta()">${dados.caneta?'Marcar que não usa':'Marcar que usa'}</button></div>
     <div class="mo-r"><div><b>Equação de cálculo</b><span>Em uso: ${m.metodo}, gasto total ${m.get} kcal.</span></div><select onchange="setFormula(this.value)"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS</option></select></div>
 
@@ -2187,7 +2144,7 @@ function remItem(mi,ii){const me=dieta.meals[mi],f=F[me.itens[ii].f];me.editado=
 
 /* ----- busca e cadastro de alimentos (área da nutricionista) ----- */
 const macroPct=t=>{const a=t.p*4,b=t.c*4,c=t.g*9,tot=(a+b+c)||1;let x=[Math.round(a/tot*100),Math.round(b/tot*100),Math.round(c/tot*100)];x[1]+=100-x[0]-x[1]-x[2];return x;};
-const pil=(k,p,c,g,d)=>{const f=d?(x=>br(r1(x))):(x=>Math.round(x));return `<span class="mcp"><i class="k">${Math.round(k)} kcal</i><i class="p">PTN ${f(p)}</i><i class="c">CHO ${f(c)}</i><i class="g">LIP ${f(g)}</i></span>`;};
+const pil=(k,p,c,g,d)=>{const f=d?(x=>br(r1(x))):(x=>Math.round(x));return `<span class="mcp"><i class="p">PTN ${f(p)}</i><i class="c">CHO ${f(c)}</i><i class="g">LIP ${f(g)}</i><i class="k">${Math.round(k)} kcal</i></span>`;};
 const semAc=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const rotulo=f=>`${Math.round(f.k*f.u.g/100)} kcal · 1 ${f.u.s} (${f.u.g} g)`;
 function buscaAlim(mi){
@@ -2282,6 +2239,11 @@ async function toggleCaneta(){
   if(NUVEM&&dados.id){const r=await sbA.from('clientes').update({dados}).eq('id',dados.id);if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);}
   logH('edicao','Uso de caneta emagrecedora: '+(dados.caneta?'sim':'não'));renderAdmin();
   ask('Refazer a dieta com as regras '+(dados.caneta?'da caneta (menos calorias, proteína em primeiro lugar, porções menores)':'do plano comum')+'? As edições feitas nesta dieta serão descartadas.',()=>{dieta=gerarDieta(dados);save('dieta',dieta);trocas={};save('trocas',trocas);mealSel=0;logH('edicao','Dieta refeita com as regras '+(dados.caneta?'da caneta':'do plano comum')+'.');renderAdmin();});
+}
+function setRitmo(){
+  const v=Math.max(0,Math.round(num($('ritmoIn').value)));dados.ajuste=v;save('dados',dados);
+  if(NUVEM&&dados.id)sbA.from('clientes').update({dados}).eq('id',dados.id).then(r=>{if(r.error)aviso('Salvo só neste aparelho: '+r.error.message);});
+  dieta.meta=metas(dados);save('dieta',dieta);logH('edicao','Ritmo do plano: '+(dados.obj==='ganhar'?'superávit':'déficit')+' de '+v+' kcal por dia.');renderAdmin();
 }
 function setFormula(v){
   if(!window._ok4){ask('Trocar a equação recalcula as metas e gera a dieta de novo, descartando edições. Continuar?',()=>{window._ok4=1;setFormula(v);window._ok4=0},()=>renderAdmin());return;}
@@ -2553,7 +2515,7 @@ function preencherForm(){
   ['sexo','idade','altura','peso','atv','obj','refs'].forEach(k=>{if(dados[k]!=null)$(k).value=dados[k];});
   document.querySelectorAll('#restr input').forEach(i=>i.checked=(dados.restr||[]).includes(i.value));
   $('dislikes').value=(dados.dislikes||[]).join(', ');
-  if(dados.metaKg){$('metaKg').value=dados.metaKg;$('metaDias').value=dados.metaDias;metaTocada=true;}
+  if(dados.metaKg)$('metaKg').value=dados.metaKg;
   formMeta();saudar();
 }
 let navStack=[],tabAtual=null;
