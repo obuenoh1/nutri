@@ -724,15 +724,17 @@ body.claro .mcard,body.claro .card{box-shadow:0 1px 3px rgba(74,21,34,.05)}
 .pk-b{margin-top:6px}.pk-b .act.main{padding:7px 16px;font-size:13px;font-weight:500}
 body.claro .pk{background:#fff}
 
-/* ===== Bloco compacto de alterações ===== */
-.pop{background:#fff;border:1px solid #e6e6e4;border-radius:14px;box-shadow:0 10px 28px rgba(30,26,28,.12);margin-top:8px;overflow:hidden;animation:popin .15s ease-out}
-@keyframes popin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.pop>input{width:100%;border:0;border-bottom:1px solid #efefed;border-radius:0;background:#fafafa;padding:11px 14px;font-size:14px;margin:0}
-.pop-l{max-height:236px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.pop-i{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #efefed;padding:10px 14px;border-radius:0;min-height:0!important;color:#3f2227}
-.pop-i:last-child{border-bottom:0}.pop-i:hover{background:#f6f3f3}
-.pop-i b{display:block;font-size:14px;font-weight:600}.pop-i small{display:block;font-size:12px;color:#8b8587;margin-top:1px}.pop-i em{font-style:normal;font-size:12.5px;color:#8b8587;white-space:nowrap}
-.pop-i .mcp{margin-top:5px}.pop-v{padding:12px 14px;font-size:13px;color:#8b8587}
+/* ===== Menu flutuante estilo iPhone ===== */
+.pop-bg{position:fixed;inset:0;z-index:300;background:rgba(255,255,255,0);transition:background .2s,backdrop-filter .2s}.pop-bg.on{background:rgba(245,245,245,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.pop{position:fixed;z-index:301;border-radius:24px;overflow:hidden;background:rgba(248,248,248,.74);-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);border:1px solid rgba(255,255,255,.7);box-shadow:0 20px 60px rgba(30,26,28,.28),0 2px 10px rgba(30,26,28,.08);opacity:0;transform:scale(.9);transition:opacity .16s,transform .2s cubic-bezier(.2,.9,.3,1.1);display:flex;flex-direction:column}
+.pop.on{opacity:1;transform:none}
+.pop>input{border:0;border-bottom:1px solid rgba(60,60,67,.14);border-radius:0;background:transparent;padding:14px 18px;font-size:16px;margin:0;width:100%}
+.pop-l{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pop-i{display:flex;justify-content:space-between;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:13px 18px;border-radius:0;min-height:0!important;color:#1c1c1e;position:relative}
+.pop-i+.pop-i:before{content:"";position:absolute;left:18px;right:18px;top:0;height:1px;background:rgba(60,60,67,.14)}
+.pop-i:hover,.pop-i:active{background:rgba(60,60,67,.08)}
+.pop-i b{display:block;font-size:16px;font-weight:400}.pop-i small{display:block;font-size:12.5px;color:#8e8e93;margin-top:1px}.pop-i em{font-style:normal;font-size:13px;color:#8e8e93;white-space:nowrap}
+.pop-i .mcp{margin-top:5px}.pop-v{padding:16px 18px;font-size:14px;color:#6e6e73}
 </style>
 </head>
 <body>
@@ -1908,10 +1910,10 @@ function renderAdmin(){
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
       h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><em class="ms">${curta(f,it.g)}</em></div><div class="il-p">${pil(k,pp,cc,gg,1)}</div>
-        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" data-pop onclick="trocarItem(${mi},${ii})">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii},this)">Alterar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" data-pop onclick="bibPainel(${mi})">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi},this)">Alterar a refeição</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
 </div></details>`;
   });
@@ -2037,9 +2039,8 @@ async function bibSalvar(mi){
   if(NUVEM){const {id,nome,tipo,criado,...dados}=e;const r=await sbA.from('biblioteca').upsert({id,nome,tipo,criado,dados});if(r.error){aviso('Salva só neste aparelho: '+r.error.message);return;}}
   logH('edicao',me.nome+': salvou "'+e.nome+'" na biblioteca');aviso('Refeição salva na biblioteca.');
 }
-function bibPainel(mi){
-  const o=$('bib'+mi),aberto=o.innerHTML;popFechar();if(aberto)return;
-  o.innerHTML=`<div class="pop"><input id="bq${mi}" placeholder="Buscar por nome ou alimento, ex.: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="pop-l"></div></div>`;
+function bibPainel(mi,btn){
+  popAbrir(btn,`<input id="bq${mi}" placeholder="Buscar: pão, ovo, frango" oninput="bibLista(${mi})" autocomplete="off"><div id="bl${mi}" class="pop-l"></div>`);
   bibLista(mi);
 }
 function bibLista(mi){
@@ -2052,15 +2053,26 @@ function bibLista(mi){
 }
 
 /* ===== Trocar um alimento dentro da refeição (vale só para esta dieta) ===== */
-/* Bloco compacto de alterações, como o menu do iPhone */
+/* Menu flutuante de alterações, igual ao menu de contexto do iPhone */
 const PK={};
-function popFechar(){document.querySelectorAll('.pop').forEach(e=>e.remove());}
-document.addEventListener('click',e=>{if(!e.target.closest('.pop')&&!e.target.closest('[data-pop]'))popFechar();});
-function trocarItem(mi,ii){
-  const o=$('ti'+mi+'_'+ii),aberto=o.innerHTML;popFechar();if(aberto)return;
+function popFechar(){document.querySelectorAll('.pop,.pop-bg').forEach(e=>e.remove());}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')popFechar();});
+function popAbrir(btn,html){
+  popFechar();
+  const bg=document.createElement('div');bg.className='pop-bg';bg.onclick=popFechar;document.body.appendChild(bg);
+  const d=document.createElement('div');d.className='pop';d.innerHTML=html;document.body.appendChild(d);
+  const r=btn.getBoundingClientRect(),w=Math.min(330,innerWidth-24),mh=Math.round(innerHeight*.58);
+  d.style.width=w+'px';d.style.maxHeight=mh+'px';d.style.left=Math.min(Math.max(12,r.right-w),innerWidth-w-12)+'px';
+  const h=Math.min(d.scrollHeight,mh);let top=r.bottom+8,orig='top';
+  if(top+h>innerHeight-12){top=Math.max(12,r.top-h-8);orig='bottom';}
+  d.style.top=top+'px';d.style.transformOrigin=orig+' right';
+  requestAnimationFrame(()=>{bg.classList.add('on');d.classList.add('on');});
+  const q=d.querySelector('input');if(q)q.focus();
+}
+function trocarItem(mi,ii,btn){
   const me=dieta.meals[mi],it=me.itens[ii],subs=substituicoes(it,me.tipo,dados);PK[mi+'_'+ii]=subs;
-  o.innerHTML=subs.length?`<div class="pop"><div class="pop-l">${subs.map((x,i)=>`<button class="pop-i" onclick="popUsa(${mi},${ii},${i})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]}</small></span><em>${Math.round(x.x.k*x.g/100)} kcal</em></button>`).join('')}</div></div>`
-    :`<div class="pop"><div class="pop-v">Sem opções de troca para este alimento. Use "Buscar alimento" para adicionar outro e depois remova este.</div></div>`;
+  popAbrir(btn,subs.length?`<div class="pop-l">${subs.map((x,i)=>`<button class="pop-i" onclick="popUsa(${mi},${ii},${i})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${curta(x.x,x.g)}</small></span><em>${Math.round(x.x.k*x.g/100)} kcal</em></button>`).join('')}</div>`
+    :`<div class="pop-v">Sem opções de troca para este alimento. Use "Buscar alimento" para adicionar outro e depois remova este.</div>`);
 }
 function popUsa(mi,ii,i){const x=PK[mi+'_'+ii][i];popFechar();aplicarTroca(mi,ii,x.id,x.g);}
 function aplicarTroca(mi,ii,id,g){
