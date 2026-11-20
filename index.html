@@ -668,6 +668,27 @@
   details.mcard>summary{text-decoration:none;text-align:left;color:var(--ink);font-size:13px}
   details.mcard{margin-top:0;font-size:13px}
   .ms-a b,.ms-a span,.ms-k b,.ms-k small{text-decoration:none}
+
+/* ===== Revisão: visual mais limpo, cores nos macros e cartões ===== */
+.rv-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.rv-top h2{margin:0}
+.cps{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cp{background:#efe7d8;color:#4a3830;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:500}
+.cp.warn{background:#f3dcd8;color:#8a3f38}.cp.pen{background:#e6e8d5;color:#4f5a33}.cp.ob{background:#f4ead2;color:#7a5f1a}
+.mais{margin-top:14px;border-top:1px solid #e6dccb;padding-top:10px}.mais summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#713C43;list-style:none}.mais summary::before{content:"+ ";font-weight:400}.mais[open] summary::before{content:"− "}
+.mo{display:flex;flex-direction:column;gap:8px;margin-top:10px}.mo-r{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#f6efe1;border-radius:14px;padding:11px 13px}
+.mo-r b{display:block;font-size:13.5px}.mo-r span{display:block;font-size:12px;color:#7a6a60;margin-top:2px;line-height:1.35}.mo-r select{width:auto;padding:7px 10px;font-size:13px}.mo-n{font-size:12px;color:#8a7a70;padding:2px 4px}
+.mcp{display:flex!important;flex-wrap:wrap;gap:5px;margin-top:6px}.mcp i{font-style:normal;font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 9px;background:#efe7d8;color:#4a3830}
+.mcp .p{background:#f3dcd8;color:#8a3f38}.mcp .c{background:#f4ead2;color:#7a5f1a}.mcp .g{background:#e6e8d5;color:#4f5a33}
+.il{background:#fff;border:1px solid #eadfcd;border-radius:16px;padding:12px 13px!important;margin-top:8px;box-shadow:0 1px 2px rgba(74,21,34,.04);transition:box-shadow .15s,border-color .15s}
+.il:hover{border-color:#d9b9b4;box-shadow:0 6px 16px rgba(74,21,34,.09)}
+.il-n b{font-size:14.5px}.il-q{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.il-a{margin-left:auto;display:flex;gap:6px}.ib{background:#f1ebe0;color:#713C43;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600}.ib:hover{background:#e7d9d6}.ib.x{background:transparent;color:#9a8077;font-weight:500}.ib.x:hover{color:#8a3f38;background:#f8e9e6}
+.acl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8d7569;font-weight:600;margin:16px 0 6px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}.act{background:#efe7d8;color:#3f2227;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600}.act:hover{background:#e6dac4}.act.main{background:#713C43;color:#fff}.act.main:hover{background:#5d2f36}.act.x{background:transparent;color:#9a8077;font-weight:500;padding-left:4px}
+.resb{align-items:flex-start;background:#fff!important;border:1px solid #eadfcd;border-radius:14px!important;padding:11px 13px!important;transition:box-shadow .15s,border-color .15s,transform .15s}
+.resb:hover{border-color:#d9b9b4;box-shadow:0 6px 16px rgba(74,21,34,.09);transform:translateY(-1px)}
+.res .resb b{font-size:14px}
+.res .resb{width:100%;margin-bottom:6px;text-align:left}
 </style>
 </head>
 <body>
@@ -1842,17 +1863,17 @@ function renderAdmin(){
   if(!dados||!dieta){o.innerHTML=admNav()+`<div class="card"><h2>Área da nutricionista</h2><p>Nenhuma cliente selecionada. Escolha uma na lista de clientes.</p><button onclick="admView='clientes';renderAdmin()">Ver clientes</button></div>`;return;}
   const t=totaisDia(dieta),m=dieta.meta;
   const pc=(a,b)=>Math.round(a/b*100);
-  let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card"><h2>Revisão: ${esc(dados.nome)} <span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></h2>
-   <div class="sub">${dados.sexo==='f'?'F':'M'}, ${dados.idade} anos, ${dados.peso} kg, ${dados.altura} cm · IMC ${br(m.imc)} · ${dados.refs} refeições · restrições: ${dados.restr.join(', ')||'nenhuma'}${dados.dislikes.length?' · não gosta: '+esc(dados.dislikes.join(', ')):''}</div>
-   <div class="sub" style="margin-top:6px">Meta da cliente: ${dados.metaKg?`perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'sem meta em quilos'}</div>
-   <div class="sub" style="margin-top:6px"><button class="mini light" onclick="refazerBib()">Refazer a dieta com a biblioteca</button> (modelos com modo de preparo; descarta as edições desta dieta)</div>
-   <div class="sub" style="margin-top:6px">Usa caneta emagrecedora: <b>${dados.caneta?'sim':'não'}</b>${dados.caneta?` (piso ${PISO(dados)} kcal · proteína ${CANETA.protGkg} g/kg · ajuste máx. ${CANETA.escalaMax}×)`:''} <button class="mini light" onclick="toggleCaneta()">${dados.caneta?'marcar que não usa':'marcar que usa'}</button></div>
-   <div class="sub" style="margin-top:6px">Equação: <select onchange="setFormula(this.value)" style="width:auto;display:inline-block;padding:6px 10px"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática (Mifflin se emagrecer ou IMC 25+, senão OMS)</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS (FAO/WHO/UNU)</option></select></div>
-   <div class="sub" style="margin-top:6px">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: TMB ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}</div>
-   <div class="sub" style="margin-top:6px">Objetivo: ${dados.obj==='emagrecer'?'emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'ganhar massa, superávit de '+dados.ajuste+' kcal':'manter'} · Método: ${m.metodo} · gasto basal ${m.tmb} kcal · gasto total ${m.get} kcal</div>
+  let h=admNav()+`<div class="admsum"><div class="bars">${[['Calorias',t.k,m.kcal,' kcal'],['Proteína',t.p,m.prot,' g'],['Carboidrato',t.c,m.carb,' g'],['Gordura',t.g,m.gord,' g']].map(([n,v,mt,u])=>{const r=v/mt,cl=r<.9?'baixo':r>1.1?'alto':'ok';return `<div class="bar ${cl}"><div class="bt"><span>${n}</span><b>${Math.round(v)}<small> / ${mt}${u}</small></b></div><div class="bf"><i style="width:${Math.min(100,Math.round(r*100))}%"></i></div></div>`;}).join('')}</div><button class="mini" onclick="recalcDia()">Ajustar às metas</button></div><div class="card rv"><div class="rv-top"><h2>Revisão: ${esc(dados.nome)}</h2><span class="tag ${dieta.status==='aprovada'?'l':''}">${dieta.status==='aprovada'?'aprovada':'em revisão'}</span></div>
+   <div class="cps"><span class="cp">${dados.sexo==='f'?'Feminino':'Masculino'}, ${dados.idade} anos</span><span class="cp">${dados.peso} kg</span><span class="cp">${dados.altura} cm</span><span class="cp">IMC ${br(m.imc)}</span><span class="cp">${dados.refs} refeições</span>${dados.caneta?'<span class="cp pen">Usa caneta</span>':''}${dados.restr.length?`<span class="cp warn">Restrições: ${dados.restr.join(', ')}</span>`:''}${dados.dislikes.length?`<span class="cp warn">Não gosta: ${esc(dados.dislikes.join(', '))}</span>`:''}</div>
+   <div class="cps"><span class="cp ob">${dados.obj==='emagrecer'?'Objetivo: emagrecer, déficit de '+dados.ajuste+' kcal':dados.obj==='ganhar'?'Objetivo: ganhar massa, superávit de '+dados.ajuste+' kcal':'Objetivo: manter o peso'}</span><span class="cp">${dados.metaKg?`Meta: perder ${br(dados.metaKg)} kg em ${dados.metaDias} dias`:'Sem meta em quilos'}</span></div>
    ${t.k<m.kcal*.9?`<div class="alert" style="margin-top:12px">A dieta ficou em ${Math.round(t.k/m.kcal*100)}% da meta de calorias. As restrições e os alimentos excluídos limitam as opções. Ajuste as quantidades ou acrescente alimentos antes de aprovar.</div>`:''}<div id="admGaps"></div>
    ${(dados.sem||[]).length?`<div class="info" style="margin-top:12px">Refeições removidas desta cliente: ${(dados.sem||[]).map(c=>`<b>${L.refeicoes[c]||c}</b> <button class="mini light" onclick="restaurarRefeicao('${c}')">Trazer de volta</button>`).join(' ')}</div>`:''}
-   <div class="row" style="margin-top:14px;font-size:14px"><div>Energia: <b>${Math.round(t.k)}</b> de ${m.kcal} kcal</div><div>Proteína: <b>${Math.round(t.p)}</b> de ${m.prot} g</div><div>Carboidrato: <b>${Math.round(t.c)}</b> de ${m.carb} g</div><div>Gordura: <b>${Math.round(t.g)}</b> de ${m.gord} g</div></div></div>`;
+   <details class="mais"><summary>Mais opções e cálculo</summary><div class="mo">
+    <div class="mo-r"><div><b>Refazer a dieta</b><span>Gera de novo com a biblioteca. As edições feitas aqui serão descartadas.</span></div><button class="mini light" onclick="refazerBib()">Refazer</button></div>
+    <div class="mo-r"><div><b>Caneta emagrecedora</b><span>${dados.caneta?`Usa. Mínimo de ${PISO(dados)} kcal e proteína em primeiro lugar.`:'Não usa.'}</span></div><button class="mini light" onclick="toggleCaneta()">${dados.caneta?'Marcar que não usa':'Marcar que usa'}</button></div>
+    <div class="mo-r"><div><b>Equação de cálculo</b><span>Automática usa Mifflin se for emagrecer ou IMC 25+, senão OMS.</span></div><select onchange="setFormula(this.value)"><option value="auto" ${(dados.formula||'auto')==='auto'?'selected':''}>Automática</option><option value="mifflin" ${dados.formula==='mifflin'?'selected':''}>Mifflin-St Jeor</option><option value="oms" ${dados.formula==='oms'?'selected':''}>OMS</option></select></div>
+    <div class="mo-n">${['mifflin','oms'].map(f=>{const b=baseEnergia({...dados,formula:f});return (f==='mifflin'?'Mifflin':'OMS')+`: gasto basal ${b.tmb}, fator ${br(b.fa)}, gasto total ${b.get} kcal`;}).join(' · ')}<br>Em uso: ${m.metodo} · gasto basal ${m.tmb} kcal · gasto total ${m.get} kcal</div>
+   </div></details></div>`;
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
@@ -1866,12 +1887,11 @@ function renderAdmin(){
       `;
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
-      h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b><span>${Math.round(k)} kcal · PTN ${r1(pp)} · CHO ${r1(cc)} · LIP ${r1(gg)}</span></div>
-        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span></div>
-        <button class="mini" onclick="trocarItem(${mi},${ii})">trocar</button><button class="mini light" onclick="remItem(${mi},${ii})">remover</button></div><div id="ti${mi}_${ii}"></div>`;
+      h+=`<div class="il"><div class="il-n"><b>${esc(f.n)}</b>${pil(k,pp,cc,gg,1)}</div>
+        <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii})">⇄ Trocar</button><button class="ib x" onclick="remItem(${mi},${ii})">Remover</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
-    h+=`<div class="addbox"><input id="q${mi}" placeholder="Buscar alimento para adicionar" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="row" style="margin-top:12px"><button class="mini" onclick="bibPainel(${mi})">Trocar por uma da biblioteca</button><button class="mini light" onclick="removerRefeicao(${mi})">Remover esta refeição</button><button class="mini light" onclick="bibSalvar(${mi})">Salvar esta na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="mini light" onclick="bibAtualizarDe(${mi})">Atualizar o modelo base com estas quantidades</button>`:''}</div><div id="bib${mi}"></div>
+    h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi})">Trocar a refeição inteira</button><button class="act" onclick="bibSalvar(${mi})">Salvar na biblioteca</button>${meal.bibId&&BIB.some(b=>b.id===meal.bibId)?`<button class="act" onclick="bibAtualizarDe(${mi})">Atualizar modelo base</button>`:''}<button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <label>Modo de preparo (aparece para a cliente)</label><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
       <label>Observação para a cliente (aparece na refeição)</label><textarea rows="2" placeholder="Ex.: pode trocar o pão por tapioca" onchange="setMealCampo(${mi},'obs',this.value)">${esc(obsDe(meal))}</textarea></div></details>`;
   });
@@ -2007,7 +2027,7 @@ function bibLista(mi){
   const serve=b=>!(b.contem||[]).some(t=>rs.includes(t))&&(!vg||(b.dieta_tipo||[]).includes(vg));
   const ws=q.split(/[\s,]+/).filter(Boolean),nomesDe=b=>b.itens.map(i=>(F[i.f]||(b.extras||[]).find(x=>x.id===i.f)||{}).n||'').filter(Boolean);
   const l=BIB.filter(b=>serve(b)&&(!ws.length||ws.every(w=>semAc(b.nome+' '+b.tipo+' '+nomesDe(b).join(' ')).includes(w)))).sort((a,b)=>(b.tipo===me.nome)-(a.tipo===me.nome));
-  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)} · ${Math.round(t.k)} kcal · PTN ${Math.round(t.p)} · CHO ${Math.round(t.c)} · LIP ${Math.round(t.g)}</small>${ws.length&&!ws.every(w=>semAc(b.nome).includes(w))?`<small>com ${esc(nomesDe(b).filter(n=>ws.some(w=>semAc(n).includes(w))).join(', '))}</small>`:''}</span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
+  o.innerHTML=l.length?l.map(b=>{const t=totais({itens:b.itens.filter(i=>F[i.f]||(b.extras||[]).some(x=>x.id===i.f)).map(i=>({f:i.f,g:i.g}))});return `<button class="resb" onclick="bibAplicar(${mi},'${b.id}')"><span><b>${esc(b.nome)}</b><small>${esc(b.tipo)}</small>${pil(t.k,t.p,t.c,t.g)}${ws.length&&!ws.every(w=>semAc(b.nome).includes(w))?`<small>com ${esc(nomesDe(b).filter(n=>ws.some(w=>semAc(n).includes(w))).join(', '))}</small>`:''}</span></button>`;}).join(''):`<div class="sub" style="padding:6px 2px">${BIB.length?'Nada encontrado para as restrições desta cliente.':'A biblioteca está vazia. Use "Salvar esta na biblioteca" numa refeição pronta.'}</div>`;
 }
 
 /* ===== Trocar um alimento dentro da refeição (vale só para esta dieta) ===== */
@@ -2018,7 +2038,7 @@ function trocarItem(mi,ii){
 function trocaLista(mi,ii){
   const me=dieta.meals[mi],it=me.itens[ii],q=semAc($('tq'+mi+'_'+ii).value.trim()),ws=q.split(/[\s,]+/).filter(Boolean),o=$('tl'+mi+'_'+ii);
   const subs=substituicoes(it,me.tipo,dados).filter(x=>!ws.length||ws.every(w=>semAc(x.x.n).includes(w)));
-  o.innerHTML=subs.length?subs.map(x=>`<button class="resb" onclick="aplicarTroca(${mi},${ii},'${x.id}',${x.g})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]} · ${x.k} kcal${x.dif?' · '+x.dif:''}</small></span></button>`).join(''):`<div class="sub" style="padding:8px">Nenhuma opção de troca${ws.length?' com essa palavra':' para este alimento'}. Para um alimento fora da lista, use "Buscar alimento para adicionar" e depois remova o outro.</div>`;
+  o.innerHTML=subs.length?subs.map(x=>`<button class="resb" onclick="aplicarTroca(${mi},${ii},'${x.id}',${x.g})"><span><b>${esc(x.x.n)}</b><small>${x.g} g · ${x.txt.split(' - ')[0]}</small>${pil(x.x.k*x.g/100,x.x.p*x.g/100,x.x.c*x.g/100,x.x.g*x.g/100)}${x.dif?`<small>${x.dif}</small>`:''}</span></button>`).join(''):`<div class="sub" style="padding:8px">Nenhuma opção de troca${ws.length?' com essa palavra':' para este alimento'}. Para um alimento fora da lista, use "Buscar alimento para adicionar" e depois remova o outro.</div>`;
 }
 function aplicarTroca(mi,ii,id,g){
   const me=dieta.meals[mi],it=me.itens[ii],velho=F[it.f],novo=F[id];if(!novo)return;
@@ -2105,6 +2125,7 @@ function recalcDia(){
 function remItem(mi,ii){const me=dieta.meals[mi],f=F[me.itens[ii].f];me.editado=true;me.itens.splice(ii,1);save('dieta',dieta);logH('edicao',me.nome+': removeu '+f.n);renderAdmin();}
 
 /* ----- busca e cadastro de alimentos (área da nutricionista) ----- */
+const pil=(k,p,c,g,d)=>{const f=d?(x=>br(r1(x))):(x=>Math.round(x));return `<span class="mcp"><i class="k">${Math.round(k)} kcal</i><i class="p">P ${f(p)}</i><i class="c">C ${f(c)}</i><i class="g">G ${f(g)}</i></span>`;};
 const semAc=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const rotulo=f=>`${Math.round(f.k*f.u.g/100)} kcal · 1 ${f.u.s} (${f.u.g} g)`;
 function buscaAlim(mi){
