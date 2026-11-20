@@ -792,6 +792,7 @@ body{overflow-x:clip}
 .sem-t td b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;font-weight:500;color:#3f2227;line-height:1.3}
 .sem-t td small{display:block;margin-top:3px;font-size:11px;color:#9a9597}
 .sem-t tr.tot td{background:transparent;cursor:default;padding-top:6px;border-top:1px solid #ececea;border-radius:0}.sem-t tr.tot td b{font-weight:700;color:#713C43;-webkit-line-clamp:1}
+.tit-l{display:flex;align-items:center;gap:8px;margin-bottom:4px}.tit-l .tit-in{flex:1;min-width:0;margin:0!important}.tit-l .act{flex:none;padding:6px 14px!important;font-size:12.5px!important}
 </style>
 </head>
 <body>
@@ -1085,7 +1086,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='17'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='18'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2023,12 +2024,12 @@ function renderAdmin(){
   if(ALIMENTOS_ATIVO){const gm=dietaMap(dieta,true);if(gm){const td=totalDia(gm),gaps=td.filter(x=>!x.inc&&x.pc<70),sem=td.filter(x=>x.inc).map(x=>x.n);
     const nota=sem.length?' Sem dados suficientes na TACO: '+sem.join(', ')+'.':'';
     h=h.replace('<div id="admGaps"></div>',gaps.length?`<div class="alert" style="margin-top:12px"><b>Abaixo de 70% do valor diário:</b> ${gaps.map(x=>x.n+' '+Math.round(x.pc)+'%').join(', ')}. Vale conferir antes de aprovar.${nota}</div>`:`<div class="info" style="margin-top:12px">Todos os nutrientes com dados suficientes estão em 70% ou mais do valor diário.${nota}</div>`);}}
-  h+=semanaCard()+chipsDias('admDia')+'<div class="mnav"><span>Role para o lado para ver as outras refeições</span><button onclick="faixa(-1)" aria-label="Anterior">‹</button><button onclick="faixa(1)" aria-label="Próxima">›</button></div><div class="mstrip">';
+  h+=(diasOk(dieta)?'':semanaCard())+chipsDias('admDia')+'<div class="mnav"><span>Role para o lado para ver as outras refeições</span><button onclick="faixa(-1)" aria-label="Anterior">‹</button><button onclick="faixa(1)" aria-label="Próxima">›</button></div><div class="mstrip">';
   dieta.meals.forEach((meal,mi)=>{
     const tm=totais(meal);
     h+=`<details class="mcard" open><summary onclick="event.preventDefault()"><div class="ms-a"><b>${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</b><span>${esc(meal.titulo)}</span></div><div class="ms-k"><b>${Math.round(tm.k)} kcal</b><small>PTN ${Math.round(tm.p)} · CHO ${Math.round(tm.c)} · LIP ${Math.round(tm.g)}</small></div></summary>
       <div class="mcard-b"><div class="foto-l">${(meal.foto||fotoDe(meal))?`<img class="foto-t" src="${meal.foto||fotoDe(meal)}" alt="" onerror="this.remove()">`:'<span class="foto-v">Sem foto</span>'}<span class="foto-a"><label class="ib">${meal.foto?'Trocar foto':'Anexar foto'}<input type="file" accept="image/*" hidden onchange="anexarFoto(${mi},this)"></label>${meal.foto?`<button class="ib x" onclick="removerFoto(${mi})">Remover</button>`:''}</span></div>
-      <input class="tit-in" placeholder="Título da refeição" value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)">
+      <div class="tit-l"><input class="tit-in" placeholder="Título da refeição" value="${esc(meal.titulo)}" onchange="setMealCampo(${mi},'titulo',this.value)"><button class="act main" onclick="bibPainel(${mi},this)">Alterar</button></div>
       `;
     meal.itens.forEach((it,ii)=>{
       const f=F[it.f],k=f.k*it.g/100,pp=f.p*it.g/100,cc=f.c*it.g/100,gg=f.g*it.g/100;
@@ -2036,7 +2037,7 @@ function renderAdmin(){
         <div class="il-q"><div class="stp"><button aria-label="Diminuir" onclick="stepQ(${mi},${ii},-1)">−</button><input class="qi" type="text" inputmode="decimal" value="${Math.round(it.g)}" onchange="editG(${mi},${ii},this.value)"><button aria-label="Aumentar" onclick="stepQ(${mi},${ii},1)">+</button></div><span class="un">g</span><span class="il-a"><button class="ib" onclick="trocarItem(${mi},${ii},this)">Alterar</button><button class="ib x" title="Remover" aria-label="Remover" onclick="remItem(${mi},${ii})">×</button></span></div></div><div id="ti${mi}_${ii}"></div>`;
     });
     h+=`<div class="acl">Adicionar um alimento</div><div class="addbox"><input id="q${mi}" placeholder="Buscar alimento, ex.: banana" oninput="buscaAlim(${mi})" onfocus="buscaAlim(${mi})" autocomplete="off"><button class="mini light" onclick="formAlim(${mi})">Cadastrar da TBCA</button></div><div id="res${mi}" class="res"></div><div id="nf${mi}"></div>
-      <div class="acl">Esta refeição</div><div class="acts"><button class="act main" onclick="bibPainel(${mi},this)">Alterar a refeição</button><button class="act" onclick="menuBib(${mi},this)">Biblioteca ▾</button><button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
+      <div class="acl">Esta refeição</div><div class="acts"><button class="act" onclick="menuBib(${mi},this)">Biblioteca ▾</button><button class="act x" onclick="removerRefeicao(${mi})">Remover refeição</button></div><div id="bib${mi}"></div>
       <div class="acl">Modo de preparo (a cliente vê)</div><textarea rows="4" placeholder="Como fazer esta refeição" onchange="setMealCampo(${mi},'preparo',this.value)">${esc(prepDe(meal))}</textarea>
 </div></details>`;
   });
