@@ -881,7 +881,7 @@ body{overflow-x:clip}
 
   <section id="admin" class="hide adm"><div id="adminOut"></div></section>
 
-  <div class="legal">Plano alimentar elaborado e revisado por nutricionista.<br>
+  <div class="legal">Plano alimentar elaborado e revisado por nutricionista.<br><span style="opacity:.55">versão <span id="ver"></span></span><br>
   Valores nutricionais: TACO (NEPA/Unicamp, 4ª ed.).<br>
   <a href="#" onclick="verApresentacao();return false" style="color:var(--muted)">Página de apresentação</a> · <a href="#" onclick="entrarNutri();return false" style="color:var(--muted)">Área da nutricionista</a></div>
 </main>
@@ -1085,6 +1085,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
+const VERSAO='17'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2746,6 +2747,15 @@ function ajustaFaixa(){
 }
 try{new MutationObserver(()=>{ajustaFaixa();requestAnimationFrame(ajustaFaixa);setTimeout(ajustaFaixa,250);}).observe($('adminOut'),{childList:true});}catch(e){}
 window.addEventListener('resize',ajustaFaixa);
+try{$('ver').textContent=VERSAO;}catch(e){}
+/* Se o navegador guardou uma cópia antiga, busca a versão nova e recarrega uma vez */
+(function(){
+  if(location.protocol==='file:')return;
+  fetch(location.pathname+'?_='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
+    const m=t.match(/const VERSAO='(\d+)'/);if(!m)return;
+    if(+m[1]>+VERSAO&&sessionStorage.getItem('nutri_rec')!==m[1]){sessionStorage.setItem('nutri_rec',m[1]);location.replace(location.pathname+location.search.replace(/[?&]_v=\d+/,'')+(location.search?'&':'?')+'_v='+m[1]+location.hash);}
+  }).catch(()=>{});
+})();
 if(DEMO&&!dados)semearDemo();
 formMeta();
 tab('inicio');
