@@ -3161,7 +3161,7 @@ function ojConta(){ojFecha();aviso('Para ver o seu plano, abra o app no mesmo ce
   const primeira=!dados&&!load('onb',null);
   o.classList.add('on');ojIr(0);
   window.ojSplashFim=()=>{o.style.transition='opacity .8s ease';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},800);};
-  if(load('idioma',null))setTimeout(window.ojSplashFim,1900);else $('ojLang').style.display='flex';
+  if(load('idioma',null)&&dados)setTimeout(window.ojSplashFim,1900);else $('ojLang').style.display='flex';
 })();
 
 formMeta();
