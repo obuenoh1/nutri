@@ -995,13 +995,10 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .lp-c2.tap .lp-tap{animation:lptap .6s ease-out}
 @keyframes lptap{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(1.8)}}
 
-/* abertura clara e calma */
-.oj{background:#F2EBE0!important}
-.oj-splash{background:#F2EBE0!important;color:#6B2E38!important}
-.oj-splash .oj-mono{color:#6B2E38!important;width:96px!important;transition:all 1.2s cubic-bezier(.2,.8,.2,1)!important}
-.oj-splash .oj-wm{color:#6B2E38!important;font-size:34px!important;margin-top:18px!important;transition:opacity 1.2s .4s!important}
-.oj-splash p{color:#7A6F6A!important;font-size:17px!important}
-.oj-splash .oj-wm .a svg use{}
+/* abertura em vinho, calma */
+.oj-splash .oj-mono{width:100px!important;transition:all 1.2s cubic-bezier(.2,.8,.2,1)!important}
+.oj-splash .oj-wm{font-size:34px!important;margin-top:18px!important;transition:opacity 1.2s .4s!important}
+.oj-splash p{font-size:17px!important}
 </style>
 </head>
 <body>
@@ -1131,7 +1128,7 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 <div id="oj" class="oj" aria-live="polite">
  <div class="oj-t oj-splash" id="oj0">
   <svg class="oj-mono" viewBox="0 0 200 200"><use href="#oj-mono"/></svg>
-  <div class="oj-wm">nutrij<span class="a">a<svg viewBox="0 0 20 20"><use href="#oj-folha"/></svg></span></div>
+  <div class="oj-wm">nutrij<span class="a">a<svg viewBox="0 0 20 20"><use href="#oj-folhaC"/></svg></span></div>
   <p>Comer bem. Já.</p>
  </div>
  <div class="oj-t oj-bv" id="oj1">
@@ -1372,7 +1369,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='28'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='29'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
