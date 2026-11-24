@@ -1009,7 +1009,8 @@ button.back{background:none!important;color:var(--v)!important;padding:4px 0!imp
 body.gate nav{display:none}
 body.gate .gate-hide{display:none!important}
 body.gate main{padding-bottom:40px}
-.oj-volta{position:absolute;top:calc(16px + env(safe-area-inset-top));left:18px;z-index:5;font:600 12.5px "Manrope",sans-serif;background:rgba(255,255,255,.8);color:#5c5355;border:0;border-radius:999px;padding:7px 14px;min-height:0}
+.oj-pv{width:54px;height:54px;min-height:0;border-radius:50%;background:transparent;color:#6B2E38;border:1.5px solid rgba(107,46,56,.35);display:flex;align-items:center;justify-content:center;padding:0}.oj-pv svg{width:18px;height:18px}
+.oj-volta{position:absolute;top:calc(16px + env(safe-area-inset-top));left:18px;z-index:5;font:600 12.5px "Manrope",sans-serif;background:rgba(242,235,224,.16);color:#F2EBE0;border:1px solid rgba(242,235,224,.45)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:0;border-radius:999px;padding:7px 14px;min-height:0}
 #pagamento .pg-passos{display:flex;gap:8px;margin:4px 0 14px;font-size:12px;color:#908780}
 #pagamento .pg-passos b{color:#6b2e38}
 </style>
@@ -1157,7 +1158,6 @@ body.gate main{padding-bottom:40px}
   <p>Comer bem. Já.</p>
  </div>
  <div class="oj-t oj-bv" id="oj1">
-  <button class="oj-volta" onclick="ojVolta()">‹ Voltar</button>
   <button class="oj-pular" onclick="ojIr(4)">Pular</button>
   <div class="oj-slides" id="ojSl">
    <div class="oj-sl"><div class="oj-art" style="background:#E6DCCB"><div class="oj-ph"><img src="imagens/tour/cardapio.jpg" alt=""></div></div>
@@ -1167,10 +1167,10 @@ body.gate main{padding-bottom:40px}
    <div class="oj-sl"><div class="oj-art" style="background:#6B2E38"><div class="oj-ph"><img src="imagens/tour/compras.jpg" alt=""></div></div>
     <div class="oj-tx"><div class="n">Lista de compras</div><h2>Feita exclusivamente<br><em>para você</em>.</h2><p>Tudo o que a sua semana pede, para facilitar o seu dia a dia.</p></div></div>
   </div>
-  <div class="oj-pe"><div class="oj-dots" id="ojDots"><i class="on"></i><i></i><i></i></div><button class="oj-nx" onclick="ojProx()" aria-label="Próximo"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h10M10 5l4 4-4 4"/></svg></button></div>
+  <div class="oj-pe"><button class="oj-pv" id="ojPv" onclick="ojVolta()" aria-label="Anterior"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9H4M8 5L4 9l4 4"/></svg></button><div class="oj-dots" id="ojDots"><i class="on"></i><i></i><i></i></div><button class="oj-nx" onclick="ojProx()" aria-label="Próximo"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h10M10 5l4 4-4 4"/></svg></button></div>
  </div>
  <div class="oj-t oj-ent" id="oj4">
-  <button class="oj-volta" onclick="ojVolta()">‹ Voltar</button>
+  <button class="oj-volta" onclick="ojFechaTour()">‹ Voltar</button>
   <div class="oj-hd">
    <svg class="oj-il" style="width:34%;left:-6%;bottom:-4%;--fill:transparent;--line:#F2EBE0" viewBox="0 0 120 150"><use href="#oj-pera"/></svg>
    <svg class="oj-il" style="width:34%;right:-8%;top:8%;--fill:transparent;--line:#F2EBE0" viewBox="0 0 140 160"><use href="#oj-brocolis"/></svg>
@@ -3142,10 +3142,11 @@ if(DEMO&&!dados)semearDemo();
 let ojCur=0;
 function ojMostra(id){['oj0','oj1','oj4'].forEach(k=>$(k).classList.toggle('on',k===id));}
 function ojIr(i){ojCur=i;
-  if(i>=1&&i<=3){ojMostra('oj1');$('ojSl').style.transform='translateX('+(-(i-1)*100)+'%)';[...$('ojDots').children].forEach((d,k)=>d.classList.toggle('on',k===i-1));}
+  if(i>=1&&i<=3){ojMostra('oj1');$('ojSl').style.transform='translateX('+(-(i-1)*100)+'%)';[...$('ojDots').children].forEach((d,k)=>d.classList.toggle('on',k===i-1));$('ojPv').style.visibility=i>1?'visible':'hidden';}
   else if(i===4)ojMostra('oj4');else ojMostra('oj0');}
 function ojTour(){const o=$('oj');o.style.opacity='';o.classList.add('on');ojIr(1);}
-function ojVolta(){if(ojCur>1)ojIr(ojCur-1);else{const o=$('oj');o.style.transition='opacity .3s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},300);}}
+function ojVolta(){if(ojCur>1)ojIr(ojCur-1);}
+function ojFechaTour(){const o=$('oj');o.style.transition='opacity .3s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},300);}
 function ojProx(){ojIr(Math.min(4,ojCur+1));}
 function ojFecha(){try{localStorage.setItem(PFX+'onb','1')}catch(e){}const o=$('oj');o.style.transition='opacity .4s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},400);}
 function ojFim(dest){ojFecha();if(dest==='dados')tab('dados');else if(dest==='nutri')entrarNutri();}
