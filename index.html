@@ -962,7 +962,8 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .lp-sc{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:#F2EBE0}
 .lp-isl{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:80px;height:22px;border-radius:20px;background:#1d191a;z-index:3}
 .lp-img{position:relative;height:52%;background:#E6DCCB}.lp-img img{width:100%;height:100%;object-fit:cover}
-.lp-gr{position:absolute;left:0;right:0;top:0;height:46%;background:linear-gradient(180deg,rgba(242,235,224,.95),rgba(242,235,224,0))}
+.lp-gr{position:absolute;left:0;right:0;top:0;height:58%;background:linear-gradient(180deg,#F2EBE0 0%,#F2EBE0 42%,rgba(242,235,224,0) 100%)}
+.lp-img img{position:absolute;left:0;right:0;bottom:0;top:22%;height:78%!important;object-fit:cover;object-position:50% 60%}
 .lp-tt{position:absolute;left:16px;right:16px;top:40px}.lp-tt small{display:block;font:700 8px "Manrope",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#7A6F6A}.lp-tt b{display:block;font:500 19px/1.08 "Cormorant Garamond",serif;color:#2B2527;margin-top:3px}
 .lp-sh{position:relative;margin:-30px 12px 0;background:#fff;border-radius:16px;padding:11px;box-shadow:0 6px 16px rgba(43,37,39,.1)}
 .lp-kc{text-align:center;font:400 30px/1 "Cormorant Garamond",serif;color:#2B2527}.lp-kc small{font:500 10px "Manrope",sans-serif;color:#7A6F6A}
@@ -973,6 +974,17 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .lp-c2{right:-34px!important;bottom:7%!important}
 .lp-pp{margin:10px 16px 0;background:#EAE1D2;border-radius:10px;padding:8px 10px}.lp-pp small{display:block;font:700 7.5px 'Manrope',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#6B2E38}.lp-pp p{margin:3px 0 0;font:500 10px/1.4 'Manrope',sans-serif;color:#2B2527}
 @media(max-width:520px){.lp-c2{right:-6px!important}}
+
+.lp-tabs{position:absolute;top:38px;left:0;right:0;z-index:2;display:flex;gap:5px;justify-content:center}
+.lp-tabs span{font:600 8.5px "Manrope",sans-serif;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.85);color:#2B2527;transition:all .5s}
+.lp-tabs span.on{background:#6B2E38;color:#F2EBE0}
+.lp-rail{display:flex;width:200%;height:100%;transition:transform .9s cubic-bezier(.65,0,.35,1)}
+.lp-pg{width:50%;height:100%;position:relative}
+.lp-sc.alm .lp-rail{transform:translateX(-50%)}
+.lp-tt{top:64px!important}
+.lp-ill{display:flex;align-items:center;justify-content:center;background:#E6DCCB!important}.lp-ill svg{margin-top:40px}
+.lp-c2 .sw{transition:background .3s}.lp-c2 .sw i{transition:right .3s}
+.lp-c2.off .sw{background:#C7C5BE}.lp-c2.off .sw i{right:20px}
 </style>
 </head>
 <body>
@@ -1343,7 +1355,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='24'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='26'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2875,10 +2887,10 @@ function renderInicio(){
       <div class="lp-art">
        <div class="lp-ph"><div class="lp-sc">
         <div class="lp-isl"></div>
-        <div class="lp-img"><img src="imagens/refeicoes/alm-arroz-frango.jpg" alt="" onerror="this.remove()"><div class="lp-gr"></div><div class="lp-tt"><small>Almoço</small><b>Arroz, frango grelhado e legumes</b></div></div>
+        <div class="lp-tabs"><span class="on">Café</span><span>Almoço</span><span>Lanche</span><span>Jantar</span></div><div class="lp-rail"><div class="lp-pg"><div class="lp-img"><img src="imagens/refeicoes/cafe-iogurte-frutas.jpg" alt="" onerror="this.remove()"><div class="lp-gr"></div><div class="lp-tt"><small>Café da manhã</small><b>Iogurte com frutas, granola e chia</b></div></div><div class="lp-sh"><div class="lp-kc">340 <small>kcal</small></div><div class="lp-mm"><div class="p"><small>Proteínas</small>16 g</div><div class="c"><small>Carbo</small>52 g</div><div class="g"><small>Gorduras</small>8 g</div></div></div><div class="lp-cp"><small>Composição</small><div><span>Iogurte natural</span><em>170 g</em></div><div><span>Frutas variadas</span><em>150 g</em></div><div><span>Granola</span><em>20 g</em></div><div><span>Chia e mel</span><em>10 g</em></div></div><div class="lp-pp"><small>Modo de preparo</small><p>Iogurte na base, frutas picadas por cima, granola de um lado e chia com um fio de mel.</p></div></div><div class="lp-pg"><div class="lp-img"><img src="imagens/refeicoes/alm-arroz-frango.jpg" alt="" onerror="this.remove()"><div class="lp-gr"></div><div class="lp-tt"><small>Almoço</small><b>Arroz, frango grelhado e legumes</b></div></div>
         <div class="lp-sh"><div class="lp-kc">380 <small>kcal</small></div><div class="lp-mm"><div class="p"><small>Proteínas</small>42 g</div><div class="c"><small>Carbo</small>33 g</div><div class="g"><small>Gorduras</small>7 g</div></div></div>
         <div class="lp-cp"><small>Composição</small><div><span>Arroz branco</span><em>100 g</em></div><div><span>Peito de frango</span><em>120 g</em></div><div><span>Abobrinha refogada</span><em>60 g</em></div><div><span>Cenoura refogada</span><em>50 g</em></div><div><span>Azeite de oliva</span><em>4 g</em></div></div><div class="lp-pp"><small>Modo de preparo</small><p>Frango temperado com alho e limão, grelhado. Legumes refogados no azeite.</p></div>
-       </div></div>
+       </div></div></div></div>
        <div class="lp-cd lp-c2"><span>Já comi</span><span class="sw"><i></i></span></div>
       </div>
      </section>
@@ -3028,6 +3040,12 @@ try{$('ver').textContent=VERSAO;}catch(e){}
   }).catch(()=>{});
 })();
 if(DEMO&&!dados)semearDemo();
+
+/* apresentação: o celular passa do café da manhã para o almoço */
+setInterval(()=>{const sc=document.querySelector('.lp-sc');if(!sc)return;const alm=!sc.classList.contains('alm');sc.classList.toggle('alm',alm);
+  const t=sc.querySelectorAll('.lp-tabs span');t.forEach((x,i)=>x.classList.toggle('on',i===(alm?1:0)));
+  const c=document.querySelector('.lp-c2');if(c){c.classList.add('off');setTimeout(()=>c.classList.remove('off'),1600);}},4200);
+
 
 /* ===== Abertura e boas-vindas ===== */
 let ojCur=0;
