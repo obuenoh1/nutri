@@ -801,7 +801,9 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 /* ===== Abertura e boas-vindas (NutriJá) ===== */
 .oj{position:fixed;inset:0;z-index:500;display:none;font-family:"Manrope",system-ui,sans-serif;color:#2B2527}
 .oj.on{display:block}
-.oj-t{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s ease}.oj-t.on{opacity:1;pointer-events:auto}
+.oj{background:#E6DCCB}
+.oj-t{position:absolute;top:0;bottom:0;left:0;right:0;margin:0 auto;max-width:460px;opacity:0;pointer-events:none;transition:opacity .5s ease;overflow:hidden}
+@media(min-width:520px){.oj-t{top:24px;bottom:24px;border-radius:36px;box-shadow:0 30px 70px rgba(43,37,39,.25)}}.oj-t.on{opacity:1;pointer-events:auto}
 .oj-wm{font:500 40px/1 "Cormorant Garamond",Georgia,serif;white-space:nowrap;display:inline-block;color:#F2EBE0}
 .oj-wm .a{position:relative;display:inline-block}.oj-wm .a svg{position:absolute;left:.03em;top:0;width:.34em;height:.34em;overflow:visible}
 .oj-splash{background:#6B2E38;color:#F2EBE0;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -1202,7 +1204,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='19'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='20'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
