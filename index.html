@@ -999,6 +999,13 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .oj-splash .oj-mono{width:100px!important;transition:all 1.2s cubic-bezier(.2,.8,.2,1)!important}
 .oj-splash .oj-wm{font-size:34px!important;margin-top:18px!important;transition:opacity 1.2s .4s!important}
 .oj-splash p{font-size:17px!important}
+
+/* tour com telas reais do app */
+.oj-art{align-items:flex-end!important;padding-top:56px}
+.oj-ph{width:62%;max-width:250px;height:100%;background:#1d191a;border-radius:30px 30px 0 0;padding:7px 7px 0;box-shadow:0 -6px 30px rgba(43,37,39,.25)}
+.oj-ph img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:24px 24px 0 0;display:block}
+
+button.back{background:none!important;color:var(--v)!important;padding:4px 0!important;font:600 14px var(--ff)!important;box-shadow:none!important;min-height:0!important}
 </style>
 </head>
 <body>
@@ -1134,23 +1141,12 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
  <div class="oj-t oj-bv" id="oj1">
   <button class="oj-pular" onclick="ojIr(4)">Pular</button>
   <div class="oj-slides" id="ojSl">
-   <div class="oj-sl"><div class="oj-art" style="background:#E6DCCB">
-     <div class="oj-card" style="left:20%;right:8%;top:24%"><small>Almoço · 12h30</small><b>Arroz, frango grelhado e legumes</b><div class="oj-mt"><i class="p">PTN 42</i><i class="c">CHO 33</i><i class="g">LIP 7</i></div></div>
-     <div class="oj-card oj-tg" style="left:30%;right:14%;top:52%"><span>Já comi</span><span class="sw"><i></i></span></div>
-     <svg style="position:absolute;width:26%;left:6%;bottom:4%;--fill:#E6B5AE;--line:#6B2E38" viewBox="0 0 120 150"><use href="#oj-pera"/></svg>
-    </div>
-    <div class="oj-tx"><div class="n">Cardápio</div><h2>Abriu, já sabe<br>o que <em>comer</em>.</h2><p>Seu cardápio da semana, feito para você e revisado pela nutricionista.</p></div></div>
-   <div class="oj-sl"><div class="oj-art" style="background:#5A6338">
-     <svg style="width:40%;--fill:#737D4C;--line:#F2EBE0" viewBox="0 0 140 160"><use href="#oj-brocolis"/></svg>
-     <div class="oj-card" style="right:7%;bottom:8%;width:46%"><b>Modo de preparo</b><small style="letter-spacing:0;text-transform:none;font-weight:500">Passo a passo, com foto.</small></div>
-    </div>
-    <div class="oj-tx"><div class="n">Receitas</div><h2>Cada refeição<br>com <em>receita</em>.</h2><p>Comida de verdade, gostosa e fácil de fazer no dia a dia.</p></div></div>
-   <div class="oj-sl"><div class="oj-art" style="background:#6B2E38">
-     <div class="oj-card" style="left:10%;right:16%;top:22%"><small>Lista da semana</small>
-      <div class="oj-ck f"><i></i><span>Peito de frango</span><em>600 g</em></div><div class="oj-ck f"><i></i><span>Abobrinha</span><em>3 un</em></div><div class="oj-ck"><i></i><span>Arroz</span><em>1 pct</em></div><div class="oj-ck"><i></i><span>Ovos</span><em>1 dz</em></div></div>
-     <svg style="position:absolute;width:38%;right:-6%;bottom:6%;--fill:#8A4A54;--line:#F2EBE0" viewBox="0 0 170 110"><use href="#oj-limao"/></svg>
-    </div>
-    <div class="oj-tx"><div class="n">Compras</div><h2>A lista do mercado<br>se monta <em>sozinha</em>.</h2><p>Tudo o que você precisa para a semana, em embalagens inteiras.</p></div></div>
+   <div class="oj-sl"><div class="oj-art" style="background:#E6DCCB"><div class="oj-ph"><img src="imagens/tour/cardapio.jpg" alt=""></div></div>
+    <div class="oj-tx"><div class="n">Dieta personalizada</div><h2>Uma dieta feita<br><em>para você</em>.</h2><p>Calculada para o seu objetivo, a sua rotina e o que você gosta de comer, e revisada pela nutricionista.</p></div></div>
+   <div class="oj-sl"><div class="oj-art" style="background:#5A6338"><div class="oj-ph"><img src="imagens/tour/receita.jpg" alt=""></div></div>
+    <div class="oj-tx"><div class="n">Receitas</div><h2>Mais de 50 receitas que<br><em>cabem na sua dieta</em>.</h2><p>Gostou de uma? Troque pelo seu lanche da tarde com um toque.</p></div></div>
+   <div class="oj-sl"><div class="oj-art" style="background:#6B2E38"><div class="oj-ph"><img src="imagens/tour/compras.jpg" alt=""></div></div>
+    <div class="oj-tx"><div class="n">Lista de compras</div><h2>Feita exclusivamente<br><em>para você</em>.</h2><p>Tudo o que a sua semana pede, para facilitar o seu dia a dia.</p></div></div>
   </div>
   <div class="oj-pe"><div class="oj-dots" id="ojDots"><i class="on"></i><i></i><i></i></div><button class="oj-nx" onclick="ojProx()" aria-label="Próximo"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h10M10 5l4 4-4 4"/></svg></button></div>
  </div>
@@ -1369,7 +1365,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='29'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='30'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -1860,7 +1856,7 @@ function legenda(t,m){
   return `<div class="leg">${l('Gordura',t.g,m.gord,'#75836A')}${l('Proteína',t.p,m.prot,'#6b2e38')}${l('Carboidrato',t.c,m.carb,'#abb394')}</div>`;
 }
 /* ----- refeições: foto do prato, macros, composição e alternativas ----- */
-function itensEf(meal,mi){return meal.itens.map((it,i)=>{const t=trocas[mi+':'+i];return t?{f:t.f,g:t.g,troca:true}:it;});}
+function itensEf(meal,mi){const rx=trocas['rec:'+mi];if(rx!=null&&RECEITAS[rx]){const r=RECEITAS[rx];return r.ing.filter(([id])=>F[id]).map(([id,g])=>({f:id,g:Math.round(g/r.por),troca:true}));}return meal.itens.map((it,i)=>{const t=trocas[mi+':'+i];return t?{f:t.f,g:t.g,troca:true}:it;});}
 function totaisI(its){return its.reduce((a,i)=>{const f=F[i.f],q=i.g/100;a.k+=f.k*q;a.p+=f.p*q;a.c+=f.c*q;a.g+=f.g*q;return a},{k:0,p:0,c:0,g:0});}
 function totaisDiaEf(){return dieta.meals.reduce((a,m,mi)=>{const t=totaisI(itensEf(m,mi));['k','p','c','g'].forEach(x=>a[x]+=t[x]);return a},{k:0,p:0,c:0,g:0});}
 const curta=(f,g)=>{const q=qDe(f,g);return f.e?`${fmtQ(q)} ${q>1?f.e[1]:f.e[0]}`:`${fmtQ(q)} ${q>1?f.u.p:f.u.s}`;};
@@ -1882,10 +1878,11 @@ function renderDieta(){
   if(dieta.nota)h+=`<div class="card sand"><h3 style="margin-top:0;color:#6e655f">Um recado meu</h3><p>${esc(dieta.nota)}</p></div>`;
   const mi=Math.min(mealSel,dieta.meals.length-1),meal=dieta.meals[mi],its=itensEf(meal,mi),tt=totaisI(its);
   const trocada=its.some(i=>i.troca);
-  const fotoU=meal.foto||(!meal.reforco&&!trocada?fotoDe(meal):'');const foto=fotoU;
+  const rxi=trocas['rec:'+mi],rxR=rxi!=null?RECEITAS[rxi]:null,titM=rxR?rxR.t:meal.titulo;
+  const fotoU=rxR?'':(meal.foto||(!meal.reforco&&!trocada?fotoDe(meal):''));const foto=fotoU;
   h+=chipsDias('selDia')+`<div class="mchips">${dieta.meals.map((x,i)=>`<button class="${i===mi?'on':''}" onclick="selMeal(${i})">${x.nome}</button>`).join('')}</div>`;
   h+=`<div class="mv"><div class="mv-ph${foto?'':' noimg'}">${foto?`<img src="${fotoU}" alt="${esc(meal.titulo)}" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}<div class="mv-ov"></div>
-      <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(meal.titulo)}</h2>${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
+      <div class="mv-txt"><div class="lbl2">${meal.hora?esc(meal.hora)+' · ':''}${meal.nome}</div><h2>${esc(titM)}</h2>${rxR?`<button class="mini light" style="margin-top:8px" onclick="desfazerRec(${mi})">Voltar à refeição do plano</button>`:''}${meal.desc?`<p>${esc(meal.desc)}</p>`:''}</div></div>
     <div class="mv-sheet"><div class="mv-card">
       <div class="mv-cal"><b>${Math.round(tt.k/10)*10}</b><span>kcal</span></div>
       <div class="mv-mac"><div class="mp"><span>Proteínas</span><b>${Math.round(tt.p)} g</b></div><div class="mc2"><span>Carboidratos</span><b>${Math.round(tt.c)} g</b></div><div class="mg"><span>Gorduras</span><b>${Math.round(tt.g)} g</b></div></div></div>
@@ -1953,6 +1950,16 @@ function renderReceitas(){
   });
   $('receitasOut').innerHTML=h||'<div class="card sand">Nenhuma receita encontrada.</div>';
 }
+
+/* A paciente troca o lanche da tarde por uma receita (só no dia aberto; a nutricionista vê a dieta original) */
+function lancheIdx(){if(!dieta)return -1;return dieta.meals.findIndex(m=>m.tipo==='lanche');}
+function botaoTrocaRec(i,t){
+  const li=lancheIdx();if(!dados||!dieta||dieta.status!=='aprovada'||li<0||!compat(RECEITAS[i]))return '';
+  const k=Math.round(totaisI(dieta.meals[li].itens).k);
+  return `<div style="text-align:center;margin-top:14px"><button onclick="trocarPorRec(${i})">Trocar pelo lanche da tarde</button><div class="sub" style="margin-top:6px;font-size:12.5px">O seu lanche de hoje tem ${k} kcal. Esta receita tem ${Math.round(t.k)} kcal por porção.</div></div>`;
+}
+function trocarPorRec(i){const li=lancheIdx();if(li<0)return;trocas['rec:'+li]=i;save('trocas',trocas);mealSel=li;tab('dieta');}
+function desfazerRec(mi){delete trocas['rec:'+mi];save('trocas',trocas);renderDieta();}
 function abrirReceita(i){
   const r=RECEITAS[i],t=rec(r),ok=compat(r);
   const ico={g:'<path d="M12 3c3 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 3-6 6-10z"/>',p:'<path d="M12 3c4 0 7 4 7 9 0 4-3 8-7 8s-7-4-7-8c0-5 3-9 7-9z"/>',c:'<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4v16"/>'};
@@ -1963,6 +1970,7 @@ function abrirReceita(i){
     <h1 style="font-size:32px;margin:22px 0 6px">${r.t}</h1>
     <div class="sub" style="text-align:center">${r.tags.map(x=>TAGNOME[x]).join(' · ')} · ${r.min} min · rende ${r.por} ${r.por>1?'porções':'porção'}${ok&&dados?' · combina comigo':''}</div>
     <div style="text-align:center;margin-top:10px"><span class="kb2">${Math.round(t.k)} kcal por porção</span></div>
+    ${botaoTrocaRec(i,t)}
     <div class="macs">${mt('Gordura',t.g,'','g')}${mt('Proteína',t.p,'','p')}${mt('Carbo',t.c,'','c')}</div>
     <div class="card"><h2>Ingredientes</h2><ul class="ing" style="margin-top:8px">${r.ing.map(([id,g])=>`<li${ALIMENTOS_ATIVO&&F[id].t&&ALIMBY[F[id].t]?` class="lk" onclick="abrirAlimento(${F[id].t})"`:''}>${medida(F[id],g)}</li>`).join('')}${r.extra?`<li>${r.extra}</li>`:''}</ul>
     <h3>Modo de preparo</h3><ol>${r.passos.map(s=>`<li>${s}</li>`).join('')}</ol>
@@ -2897,7 +2905,7 @@ function renderInicio(){
       <div class="n">Nutrição personalizada</div>
       <h2>Abriu, já sabe<br>o que <em>comer</em>.</h2>
       <p>Cardápio, receitas e lista de compras, feitos para você por uma nutricionista.</p>
-      <div class="lp-btns"><button class="lp-p" onclick="tab('dados')">Quero o meu plano</button><button class="lp-l" onclick="document.getElementById('comoFunciona').scrollIntoView({behavior:'smooth'})">Como funciona</button></div>
+      <div class="lp-btns"><button class="lp-p" onclick="tab('dados')">Quero o meu plano</button><button class="lp-l" onclick="ojTour()">Como funciona</button></div>
       <div class="lp-art">
        <div class="lp-ph"><div class="lp-sc">
         <div class="lp-isl"></div>
@@ -3084,6 +3092,7 @@ function ojMostra(id){['oj0','oj1','oj4'].forEach(k=>$(k).classList.toggle('on',
 function ojIr(i){ojCur=i;
   if(i>=1&&i<=3){ojMostra('oj1');$('ojSl').style.transform='translateX('+(-(i-1)*100)+'%)';[...$('ojDots').children].forEach((d,k)=>d.classList.toggle('on',k===i-1));}
   else if(i===4)ojMostra('oj4');else ojMostra('oj0');}
+function ojTour(){const o=$('oj');o.style.opacity='';o.classList.add('on');ojIr(1);}
 function ojProx(){ojIr(Math.min(4,ojCur+1));}
 function ojFecha(){try{localStorage.setItem(PFX+'onb','1')}catch(e){}const o=$('oj');o.style.transition='opacity .4s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},400);}
 function ojFim(dest){ojFecha();if(dest==='dados')tab('dados');else if(dest==='nutri')entrarNutri();}
@@ -3095,7 +3104,7 @@ function ojConta(){ojFecha();aviso('Para ver o seu plano, abra o app no mesmo ce
   sl.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){if(dx<0)ojProx();else if(ojCur>1)ojIr(ojCur-1);}},{passive:true});
   const primeira=!dados&&!load('onb',null);
   o.classList.add('on');ojIr(0);
-  setTimeout(()=>{if(primeira)ojIr(1);else{o.style.transition='opacity .8s ease';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},800);}},1900);
+  setTimeout(()=>{{o.style.transition='opacity .8s ease';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},800);}},1900);
 })();
 
 formMeta();
