@@ -1161,11 +1161,11 @@ body.gate main{padding-bottom:40px}
   <button class="oj-pular" onclick="ojIr(4)">Pular</button>
   <div class="oj-slides" id="ojSl">
    <div class="oj-sl"><div class="oj-art" style="background:#E6DCCB"><div class="oj-ph"><img src="imagens/tour/cardapio.jpg" alt=""></div></div>
-    <div class="oj-tx"><div class="n">Dieta personalizada</div><h2>Uma dieta feita<br><em>para você</em>.</h2><p>Calculada para o seu objetivo, a sua rotina e o que você gosta de comer, e revisada pela nutricionista.</p></div></div>
+    <div class="oj-tx"><div class="n">Cardápio</div><h2>Um cardápio<br><em>só seu</em>.</h2><p>Feito para o seu objetivo e a sua rotina, e conferido por mim antes de chegar até você.</p></div></div>
    <div class="oj-sl"><div class="oj-art" style="background:#5A6338"><div class="oj-ph"><img src="imagens/tour/receita.jpg" alt=""></div></div>
-    <div class="oj-tx"><div class="n">Receitas</div><h2>Mais de 50 receitas que<br><em>cabem na sua dieta</em>.</h2><p>Gostou de uma? Troque pelo seu lanche da tarde com um toque.</p></div></div>
+    <div class="oj-tx"><div class="n">Receitas</div><h2>Receitas que<br><em>cabem no cardápio</em>.</h2><p>Mais de 50 receitas. Enjoou do lanche da tarde? Troque por uma delas.</p></div></div>
    <div class="oj-sl"><div class="oj-art" style="background:#6B2E38"><div class="oj-ph"><img src="imagens/tour/compras.jpg" alt=""></div></div>
-    <div class="oj-tx"><div class="n">Lista de compras</div><h2>Feita exclusivamente<br><em>para você</em>.</h2><p>Tudo o que a sua semana pede, para facilitar o seu dia a dia.</p></div></div>
+    <div class="oj-tx"><div class="n">Lista de compras</div><h2>A lista de compras<br><em>já vem pronta</em>.</h2><p>Com tudo o que o cardápio da semana pede.</p></div></div>
   </div>
   <div class="oj-pe"><button class="oj-pv" id="ojPv" onclick="ojVolta()" aria-label="Anterior"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9H4M8 5L4 9l4 4"/></svg></button><div class="oj-dots" id="ojDots"><i class="on"></i><i></i><i></i></div><button class="oj-nx" onclick="ojProx()" aria-label="Próximo"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h10M10 5l4 4-4 4"/></svg></button></div>
  </div>
@@ -2944,7 +2944,7 @@ function renderInicio(){
      <section class="lp-hero">
       <div class="n">Nutrição personalizada</div>
       <h2>Abriu, já sabe<br>o que <em>comer</em>.</h2>
-      <p>Cardápio, receitas e lista de compras, feitos para você por uma nutricionista.</p>
+      <p>Eu sou nutricionista. Você me conta a sua rotina e eu monto o seu cardápio da semana, com receitas e lista de compras.</p>
       <div class="lp-btns"><button class="lp-p" onclick="tab('dados')">Quero o meu plano</button><button class="lp-l" onclick="ojTour()">Como funciona</button></div>
       <div class="lp-art">
        <div class="lp-ph"><div class="lp-sc">
@@ -2957,19 +2957,19 @@ function renderInicio(){
       </div>
      </section>
      ${NUTRI.nome?`<div class="nome-crn">Nutricionista ${esc(NUTRI.nome)}${NUTRI.crn?' · '+esc(NUTRI.crn):''}</div>`:''}
-     <section class="lp-sec" id="comoFunciona"><div class="n">Como funciona</div><h3>Três passos, <em>sem complicação</em>.</h3>
+     <section class="lp-sec" id="comoFunciona"><div class="n">Como funciona</div><h3>Do formulário <em>ao prato</em>.</h3>
       <div class="lp-steps">
-       <div><b>1</b><div><strong>Você conta a sua rotina</strong><span>Objetivo, horários, o que gosta e o que não come.</span></div></div>
-       <div><b>2</b><div><strong>Eu monto e reviso o seu plano</strong><span>Uma semana de cardápio, ajustada para você.</span></div></div>
-       <div><b>3</b><div><strong>Você abre e já sabe o que comer</strong><span>Com receita, quantidade e lista de compras.</span></div></div>
+       <div><b>1</b><div><strong>Você preenche o formulário</strong><span>Peso, altura, rotina, o que gosta e o que não come.</span></div></div>
+       <div><b>2</b><div><strong>Eu monto o cardápio</strong><span>Confiro cada refeição antes de liberar. Leva até 24 horas.</span></div></div>
+       <div><b>3</b><div><strong>Você abre o app e come</strong><span>Cada refeição vem com a quantidade e o modo de preparo.</span></div></div>
       </div></section>
-     <section class="lp-sec"><div class="n">O que você recebe</div><h3>Tudo num <em>lugar só</em>.</h3>
+     <section class="lp-sec"><div class="n">O que você recebe</div><h3>O que vem <em>no plano</em>.</h3>
       <div class="lp-cards">
-       <div style="background:#6B2E38;color:#F2EBE0">${il('pera','0 0 120 150','width:30%;--fill:#8A4A54;--line:#F2EBE0')}<strong>Cardápio da semana</strong><span>Sete dias sem repetir, com as quantidades certas para você.</span></div>
-       <div style="background:#5A6338;color:#F2EBE0">${il('brocolis','0 0 140 160','width:30%;--fill:#737D4C;--line:#F2EBE0')}<strong>Receitas</strong><span>Modo de preparo e foto de cada refeição.</span></div>
-       <div style="background:#fff">${il('limao','0 0 170 110','width:40%;--fill:#E8D49C;--line:#6B2E38')}<strong>Lista de compras</strong><span>Montada sozinha, em embalagens inteiras, do jeito que se compra no mercado.</span></div>
+       <div style="background:#6B2E38;color:#F2EBE0">${il('pera','0 0 120 150','width:30%;--fill:#8A4A54;--line:#F2EBE0')}<strong>Cardápio da semana</strong><span>Sete dias diferentes, com a quantidade de cada alimento calculada para você.</span></div>
+       <div style="background:#5A6338;color:#F2EBE0">${il('brocolis','0 0 140 160','width:30%;--fill:#737D4C;--line:#F2EBE0')}<strong>Receitas</strong><span>Mais de 50 receitas com foto e modo de preparo. Enjoou de uma refeição? Troque por outra.</span></div>
+       <div style="background:#fff">${il('limao','0 0 170 110','width:40%;--fill:#E8D49C;--line:#6B2E38')}<strong>Lista de compras</strong><span>A lista da semana já vem pronta, em pacotes e unidades, como se compra no mercado.</span></div>
       </div></section>
-     <section class="lp-cta">${il('goiaba','0 0 150 150','width:64px;--fill:#8A4A54;--line:#F2EBE0')}<h3>Comer bem. <em>Já.</em></h3><p>Conte a sua rotina e receba o seu plano.</p><button onclick="tab('dados')">Quero o meu plano</button></section>
+     <section class="lp-cta">${il('goiaba','0 0 150 150','width:64px;--fill:#8A4A54;--line:#F2EBE0')}<h3>Comer bem. <em>Já.</em></h3><p>Preencha o formulário e eu começo o seu plano.</p><button onclick="tab('dados')">Quero o meu plano</button></section>
     </div>`;
     return;
   }
