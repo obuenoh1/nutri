@@ -1121,7 +1121,7 @@ body.gate main{padding-bottom:40px}
 
   <div class="legal">Plano alimentar elaborado e revisado por nutricionista.<br><span style="opacity:.55">versão <span id="ver"></span></span><br>
   Valores nutricionais: TACO (NEPA/Unicamp, 4ª ed.).<br>
-  <a href="#" onclick="verApresentacao();return false" style="color:var(--muted)">Página de apresentação</a> · <a href="#" onclick="entrarNutri();return false" style="color:var(--muted)">Área da nutricionista</a></div>
+  <a href="#" onclick="verApresentacao();return false" style="color:var(--muted)">Página de apresentação</a> · Idioma: <a href="#" onclick="mudarIdioma('pt');return false" style="color:var(--muted)">Português</a> / <a href="#" onclick="mudarIdioma('es');return false" style="color:var(--muted)">Español</a> · <a href="#" onclick="entrarNutri();return false" style="color:var(--muted)">Área da nutricionista</a></div>
 </main>
 
 <div id="alimDet" class="hide"></div>
@@ -1988,7 +1988,7 @@ function renderReceitas(){
   $('chipsRec').innerHTML=[['','Todas'],['facil','Fáceis do dia a dia'],['doce','Doces'],['salada','Saladas'],['salgado','Salgados'],['snack','Snacks'],['proteica','Hiperproteicas'],['leve','Leves']].map(([k,n])=>`<button class="${recFiltro===k?'on':''}" onclick="setRec('${k}')">${n}</button>`).join('');
   let h='';
   RECEITAS.forEach((r,i)=>{
-    if(recFiltro&&!r.tags.includes(recFiltro))return; if(q&&!r.t.toLowerCase().includes(q))return;
+    if(recFiltro&&!r.tags.includes(recFiltro))return; if(q&&!r.t.toLowerCase().includes(q)&&!tn(r.t).toLowerCase().includes(q))return;
     if(comp&&!compat(r))return;
     const t=rec(r);
     h+=`<div class="tile t${i%4}" onclick="abrirReceita(${i})">${foto(r,i,'a')}<i class="kb">${Math.round(t.k)} kcal</i><b>${r.t}</b><span>${Math.round(t.p)} g de proteína por porção</span></div>`;
@@ -2796,6 +2796,7 @@ Object.assign(F.chia,{grp:'gord',m:['cafe','lanche']});
 Object.assign(F.camarao,{grp:'prot',m:['prato']});
 Object.assign(F.peru,{grp:'prot',m:['cafe','lanche','prato'],x:['veg']});
 
+const tn=s=>window.trES?window.trES(s):s;
 const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 function nomeA(n){const p=n.split(',').map(s=>s.trim()).filter(Boolean);return p.length<2?(p[0]||n):p[0]+' '+p.slice(1).map(s=>s.toLowerCase()).join(' ');}
 ALIM.forEach(a=>{a.nm=nomeA(a.n);a.q=norm(a.n);});
@@ -2872,9 +2873,9 @@ function renderAlimentos(){
   }else $('aDest').innerHTML='';
   $('aGrupos').innerHTML=[['','Todos']].concat(LIBG.map(g=>[g,g])).map(([k,n])=>`<button class="${alimG===k?'on':''}" onclick="alimG='${k}';alimLim=60;renderAlimentos()">${n}</button>`).join('');
   const q=norm(alimQ.trim());
-  let l=LIB.filter(x=>(alimV!=='dieta'||m[x.a.id]!=null)&&(!alimG||x.gl===alimG)&&(!q||norm(x.f.n).includes(q)));
+  let l=LIB.filter(x=>(alimV!=='dieta'||m[x.a.id]!=null)&&(!alimG||x.gl===alimG)&&(!q||norm(x.f.n).includes(q)||norm(tn(x.f.n)).includes(q)));
   if(alimN){l=l.filter(x=>claims(x.a).some(c=>c.k===alimN));l.sort((x,y)=>claims(y.a).find(c=>c.k===alimN).pc-claims(x.a).find(c=>c.k===alimN).pc);}
-  else l.sort((x,y)=>x.f.n.localeCompare(y.f.n,'pt'));
+  else l.sort((x,y)=>tn(x.f.n).localeCompare(tn(y.f.n),window.IDIOMA==='es'?'es':'pt'));
   $('aCont').textContent=`${l.length} ${l.length===1?'alimento':'alimentos'}`;
   $('aGrid').innerHTML=l.slice(0,alimLim).map(({a,f,gl})=>{
     const d=destaque(a,100),tag=claims(a).length?`<span class="atag">${d.txt}</span>`:'';
@@ -3146,7 +3147,8 @@ function ojIr(i){ojCur=i;
 function ojTour(){const o=$('oj');o.style.opacity='';o.classList.add('on');ojIr(1);}
 function ojVolta(){if(ojCur>1)ojIr(ojCur-1);}
 function ojFechaTour(){const o=$('oj');o.style.transition='opacity .3s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},300);}
-function ojIdioma(l){try{localStorage.setItem(PFX+'idioma',JSON.stringify(l))}catch(e){}$('ojLang').style.pointerEvents='none';if(window.ojSplashFim)window.ojSplashFim();}
+function mudarIdioma(l){try{localStorage.setItem(PFX+'idioma',JSON.stringify(l))}catch(e){}location.reload();}
+function ojIdioma(l){try{localStorage.setItem(PFX+'idioma',JSON.stringify(l))}catch(e){}if(l==='es'&&window.i18nStart)window.i18nStart();$('ojLang').style.pointerEvents='none';if(window.ojSplashFim)window.ojSplashFim();}
 function ojProx(){ojIr(Math.min(4,ojCur+1));}
 function ojFecha(){try{localStorage.setItem(PFX+'onb','1')}catch(e){}const o=$('oj');o.style.transition='opacity .4s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},400);}
 function ojFim(dest){ojFecha();if(dest==='dados')tab('dados');else if(dest==='nutri')entrarNutri();}
@@ -3165,5 +3167,7 @@ function ojConta(){ojFecha();aviso('Para ver o seu plano, abra o app no mesmo ce
 formMeta();
 tab('inicio');
 </script>
+<script src="i18n-es.js?v=1"></script>
+<script src="i18n.js?v=1"></script>
 </body>
 </html>
