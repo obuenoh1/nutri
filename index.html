@@ -795,7 +795,7 @@ body{overflow-x:clip}
 .tit-l{display:flex;align-items:center;gap:8px;margin-bottom:4px}.tit-l .tit-in{flex:1;min-width:0;margin:0!important}.tit-l .act{flex:none;padding:6px 14px!important;font-size:12.5px!important}
 
 /* ===== Identidade NutriJá ===== */
-body{font-variant-numeric:lining-nums}
+body{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1}
 h1,h2{font-weight:500!important;letter-spacing:0!important}
 
 /* ===== Abertura e boas-vindas (NutriJá) ===== */
@@ -856,7 +856,7 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 .lp-p,.lp-cta button{background:#6B2E38;color:#F2EBE0;border:0;border-radius:999px;padding:15px 26px;font:600 15px "Manrope",sans-serif;box-shadow:0 12px 24px rgba(107,46,56,.22)}
 .lp-l{background:#fff;color:#6B2E38;border:1px solid rgba(107,46,56,.3);border-radius:999px;padding:15px 22px;font:600 15px "Manrope",sans-serif}
 .lp-art{position:relative;margin:34px auto 10px;width:100%;max-width:440px;aspect-ratio:1/1.08}
-.lp-arco{position:absolute;left:14%;right:14%;top:0;bottom:6%;border-radius:999px 999px 28px 28px;overflow:hidden;box-shadow:0 24px 50px rgba(43,37,39,.18);background:#E6DCCB}
+.lp-arco{position:absolute;left:14%;right:14%;top:0;bottom:6%;border-radius:999px 999px 28px 28px;overflow:hidden;background:#5A6338}
 .lp-arco img{width:100%;height:100%;object-fit:cover}
 .lp-cd{position:absolute;background:#fff;border-radius:16px;box-shadow:0 14px 30px rgba(43,37,39,.16);padding:11px 14px;font-size:12px}
 .lp-c1{left:0;bottom:22%;width:58%}.lp-c1 small{display:block;font-weight:700;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#6B2E38}
@@ -865,7 +865,7 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 .lp-sec{margin-top:56px}
 .lp h3{font:400 34px/1.05 "Cormorant Garamond",serif!important;text-transform:none!important;letter-spacing:0!important;color:#2B2527!important;margin:0 0 20px}
 .lp-steps>div{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-top:1px solid rgba(43,37,39,.1)}
-.lp-steps b{flex:none;font:300 46px/.9 "Cormorant Garamond",serif;color:#6B2E38;width:34px}
+.lp-steps b{font-feature-settings:'lnum' 1;font-variant-numeric:lining-nums;flex:none;font:300 46px/.9 "Cormorant Garamond",serif;color:#6B2E38;width:34px}
 .lp-steps strong{display:block;font:600 15.5px "Manrope",sans-serif;color:#2B2527}.lp-steps span{display:block;font-size:14px;color:#6f6567;margin-top:3px}
 .lp-cards{display:grid;gap:12px}
 .lp-cards>div{border-radius:24px;padding:22px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:18px;align-items:center;box-shadow:0 1px 2px rgba(43,37,39,.05)}
@@ -1245,7 +1245,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='21'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='22'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2777,7 +2777,7 @@ function renderInicio(){
       <div class="lp-art">
        ${il('pera','0 0 120 150','position:absolute;width:24%;left:-2%;top:8%;--fill:#E6B5AE;--line:#6B2E38')}
        ${il('limao','0 0 170 110','position:absolute;width:30%;right:-4%;bottom:10%;--fill:#E8D49C;--line:#6B2E38')}
-       <div class="lp-arco"><img src="imagens/refeicoes/alm-arroz-frango.jpg" alt="Arroz, frango grelhado e legumes" onerror="this.remove()"></div>
+       <div class="lp-arco">${il('brocolis','0 0 140 160','position:absolute;width:46%;left:27%;top:16%;--fill:#737D4C;--line:#F2EBE0')}</div>
        <div class="lp-cd lp-c1"><small>Almoço</small><b>Arroz, frango grelhado e legumes</b><span><i class="p">PTN 42</i><i class="c">CHO 33</i><i class="g">LIP 7</i></span></div>
        <div class="lp-cd lp-c2"><span>Já comi</span><span class="sw"><i></i></span></div>
       </div>
