@@ -985,6 +985,15 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .lp-ill{display:flex;align-items:center;justify-content:center;background:#E6DCCB!important}.lp-ill svg{margin-top:40px}
 .lp-c2 .sw{transition:background .3s}.lp-c2 .sw i{transition:right .3s}
 .lp-c2.off .sw{background:#C7C5BE}.lp-c2.off .sw i{right:20px}
+
+.lp-c2 .sw{display:inline-block;width:44px;height:25px;border-radius:25px;background:#5A6338;position:relative;transition:background .35s}
+.lp-c2 .sw i{position:absolute;top:3px;right:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:right .35s cubic-bezier(.3,1.4,.5,1)}
+.lp-c2 .sw svg{position:absolute;left:7px;top:6px;width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;stroke-dashoffset:0;transition:stroke-dashoffset .4s .15s}
+.lp-c2.off .sw{background:#C7C5BE}.lp-c2.off .sw i{right:22px}.lp-c2.off .sw svg{stroke-dashoffset:16;transition:none}
+.lp-c2{transition:transform .2s}.lp-c2.tap{transform:scale(.96)}
+.lp-tap{position:absolute;right:18px;top:50%;width:30px;height:30px;margin-top:-15px;border-radius:50%;background:rgba(107,46,56,.18);opacity:0;transform:scale(.4);pointer-events:none}
+.lp-c2.tap .lp-tap{animation:lptap .6s ease-out}
+@keyframes lptap{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(1.8)}}
 </style>
 </head>
 <body>
@@ -1355,7 +1364,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='26'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='27'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2891,7 +2900,7 @@ function renderInicio(){
         <div class="lp-sh"><div class="lp-kc">380 <small>kcal</small></div><div class="lp-mm"><div class="p"><small>Proteínas</small>42 g</div><div class="c"><small>Carbo</small>33 g</div><div class="g"><small>Gorduras</small>7 g</div></div></div>
         <div class="lp-cp"><small>Composição</small><div><span>Arroz branco</span><em>100 g</em></div><div><span>Peito de frango</span><em>120 g</em></div><div><span>Abobrinha refogada</span><em>60 g</em></div><div><span>Cenoura refogada</span><em>50 g</em></div><div><span>Azeite de oliva</span><em>4 g</em></div></div><div class="lp-pp"><small>Modo de preparo</small><p>Frango temperado com alho e limão, grelhado. Legumes refogados no azeite.</p></div>
        </div></div></div></div>
-       <div class="lp-cd lp-c2"><span>Já comi</span><span class="sw"><i></i></span></div>
+       <div class="lp-cd lp-c2 off" id="lpJa"><span>Já comi</span><span class="sw"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg><i></i></span><b class="lp-tap"></b></div>
       </div>
      </section>
      ${NUTRI.nome?`<div class="nome-crn">Nutricionista ${esc(NUTRI.nome)}${NUTRI.crn?' · '+esc(NUTRI.crn):''}</div>`:''}
@@ -3041,10 +3050,27 @@ try{$('ver').textContent=VERSAO;}catch(e){}
 })();
 if(DEMO&&!dados)semearDemo();
 
-/* apresentação: o celular passa do café da manhã para o almoço */
-setInterval(()=>{const sc=document.querySelector('.lp-sc');if(!sc)return;const alm=!sc.classList.contains('alm');sc.classList.toggle('alm',alm);
-  const t=sc.querySelectorAll('.lp-tabs span');t.forEach((x,i)=>x.classList.toggle('on',i===(alm?1:0)));
-  const c=document.querySelector('.lp-c2');if(c){c.classList.add('off');setTimeout(()=>c.classList.remove('off'),1600);}},4200);
+/* apresentação: marca "Já comi" no café, passa para o almoço, marca de novo e recomeça */
+(function(){
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const q=()=>({sc:document.querySelector('.lp-sc'),ja:document.getElementById('lpJa')});
+  async function ciclo(){
+    for(;;){
+      if(!q().sc){await sleep(1200);continue;}
+      for(const alm of [false,true]){
+        let {sc,ja}=q();if(!sc||!ja)break;
+        sc.classList.toggle('alm',alm);
+        sc.querySelectorAll('.lp-tabs span').forEach((x,i)=>x.classList.toggle('on',i===(alm?1:0)));
+        ja.classList.add('off');ja.classList.remove('tap');
+        await sleep(1800);
+        ({ja}=q());if(!ja)break;ja.classList.add('tap');await sleep(260);
+        ({ja}=q());if(!ja)break;ja.classList.remove('off');
+        await sleep(1700);
+      }
+    }
+  }
+  ciclo();
+})();
 
 
 /* ===== Abertura e boas-vindas ===== */
