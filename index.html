@@ -865,7 +865,7 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 .lp-sec{margin-top:56px}
 .lp h3{font:400 34px/1.05 "Cormorant Garamond",serif!important;text-transform:none!important;letter-spacing:0!important;color:#2B2527!important;margin:0 0 20px}
 .lp-steps>div{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-top:1px solid rgba(43,37,39,.1)}
-.lp-steps b{font-feature-settings:'lnum' 1;font-variant-numeric:lining-nums;flex:none;font:300 46px/.9 "Cormorant Garamond",serif;color:#6B2E38;width:34px}
+.lp-steps b{flex:none;font:300 34px/1 "Manrope",sans-serif;color:#6B2E38;width:34px}
 .lp-steps strong{display:block;font:600 15.5px "Manrope",sans-serif;color:#2B2527}.lp-steps span{display:block;font-size:14px;color:#6f6567;margin-top:3px}
 .lp-cards{display:grid;gap:12px}
 .lp-cards>div{border-radius:24px;padding:22px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:18px;align-items:center;box-shadow:0 1px 2px rgba(43,37,39,.05)}
@@ -876,12 +876,92 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 .lp-cta button{background:#F2EBE0;color:#6B2E38;box-shadow:none}
 /* ===== Receitas: ilustrações no lugar do prato vazio ===== */
 .ph .rp-il{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.ph .rp-il svg{width:44%;height:auto}
+
+/* =========================================================
+   SISTEMA DE DESIGN NUTRIJÁ: uma única fonte de verdade.
+   Fica por último e vale para todas as telas.
+   ========================================================= */
+:root{
+  --v:#6B2E38;--v2:#4A1F27;--o:#5A6338;--o2:#DDE1CC;--av:#F2EBE0;--av2:#EAE1D2;--cd:#FFFDF9;--ln:#E6DCCB;--tx:#2B2527;--mu:#7A6F6A;
+  --r1:12px;--r2:20px;--rp:999px;--sh:0 1px 2px rgba(43,37,39,.04),0 8px 24px rgba(43,37,39,.06);
+  --fs:"Cormorant Garamond",Georgia,serif;--ff:"Manrope",system-ui,sans-serif;
+  --ink:#2B2527;--muted:#7A6F6A;--card:#FFFDF9;--field:#FFFFFF;--line:#E6DCCB;
+}
+body{background:var(--av)!important;color:var(--tx);font-family:var(--ff)!important;font-size:15px}
+main{max-width:600px}
+/* cabeçalho */
+.top{display:flex!important;justify-content:center!important;align-items:center;margin:0 0 6px!important;min-height:32px}
+.top .pill{display:none!important}
+.lp-mark{font-size:24px}
+.voltar{position:absolute;margin-top:2px;background:none!important;padding:6px 0!important;color:var(--v)!important;font:600 14px var(--ff)!important;box-shadow:none!important}
+.ola{font:700 10.5px var(--ff);letter-spacing:.24em;text-transform:uppercase;color:var(--v);margin:22px 0 -2px;min-height:12px}
+h1{font:500 36px/1.05 var(--fs)!important;letter-spacing:0!important;text-align:left!important;margin:8px 0 6px!important;color:var(--tx)!important}
+h1 em,h2 em{font-style:italic;color:var(--v)!important}
+h2{font-family:var(--fs)!important;font-weight:500!important;font-size:25px!important;line-height:1.1!important;letter-spacing:0!important;color:var(--tx)}
+h3{font:700 11px var(--ff)!important;letter-spacing:.18em!important;text-transform:uppercase!important;color:var(--v)!important;margin:24px 0 10px!important}
+.sub,#hello{color:var(--mu)!important;font-size:14px!important}
+/* cartões */
+.card,.mv,details.mcard,.mstrip details.mcard,.box{background:var(--cd)!important;border-radius:var(--r2)!important;box-shadow:var(--sh)!important;border:0!important}
+.card{padding:22px!important;margin:14px 0!important}
+.card.tint,.card.sand{background:var(--av2)!important;box-shadow:none!important}
+/* botões */
+button{font-family:var(--ff)!important}
+button:not(.mini):not(.light):not(.ib):not(.act):not(.pop-i):not(.resb):not(.drw-c):not(.drw-o):not([class*="oj-"]):not([class*="lp-"]):not(.nx){background:var(--v);color:var(--av);border-radius:var(--rp)!important;font-weight:600;font-size:15px;padding:14px 24px}
+button.light,.full.light{background:#fff!important;color:var(--v)!important;border:1px solid rgba(107,46,56,.28)!important;border-radius:var(--rp)!important}
+.mini{border-radius:var(--rp)!important;font-size:13px!important;padding:8px 14px!important;min-height:0!important;font-weight:600!important}
+.mini:not(.light){background:var(--v)!important;color:var(--av)!important}
+.act{border-radius:var(--rp)!important}
+/* campos */
+input,select,textarea{background:#fff!important;border:1px solid var(--ln)!important;border-radius:var(--r1)!important;padding:13px 14px!important;font-size:16px!important;color:var(--tx)!important;box-shadow:none!important}
+input:focus,select:focus,textarea:focus{border-color:var(--v)!important;outline:none}
+input[type=checkbox],input[type=radio]{width:auto!important;padding:0!important;accent-color:var(--v)}
+label{font:600 12.5px var(--ff)!important;color:var(--mu)!important}
+label.ck{font:400 15px var(--ff)!important;color:var(--tx)!important}
+.tit-in{border:0!important;background:transparent!important;padding:6px 0!important}
+/* seletores e chips: um só modelo */
+.chips label,.chipsf button,.mchips button,.dchips button,.seg button{background:#fff!important;color:var(--tx)!important;border:1px solid var(--ln)!important;border-radius:var(--rp)!important;box-shadow:none!important;font:600 13px var(--ff)!important;padding:9px 16px!important;min-height:0!important}
+.chipsf button.on,.mchips button.on,.dchips button.on,.seg button.on,.chips label:has(input:checked){background:var(--v)!important;color:var(--av)!important;border-color:var(--v)!important}
+.seg{background:transparent!important;padding:0!important;gap:6px!important}
+.dchips button.hj:after{background:var(--o)!important}
+/* atalhos do início */
+.ht{border-radius:var(--r2)!important;box-shadow:var(--sh)!important;background:var(--cd)!important;color:var(--tx)!important}
+.ht i{border-radius:12px!important;background:var(--av2)!important;color:var(--v)!important}
+.ht.wine{background:var(--v)!important;color:var(--av)!important}.ht.wine i{background:rgba(242,235,224,.16)!important;color:var(--av)!important}
+.ht.olv{background:var(--o)!important;color:var(--av)!important}.ht.olv i{background:rgba(242,235,224,.16)!important;color:var(--av)!important}
+.ht span{opacity:.75}
+/* barra de navegação */
+nav{background:rgba(255,253,249,.92)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:var(--rp)!important;box-shadow:0 10px 30px rgba(43,37,39,.12)!important;padding:6px!important;gap:2px!important}
+nav button{background:transparent!important;color:#9A8E89!important;border-radius:var(--rp)!important;padding:11px 14px!important}
+nav button.on{background:var(--v)!important;color:var(--av)!important}
+nav button svg *{fill:none!important;stroke:currentColor!important}
+/* macros: mesmas cores em todo o app */
+.mcp .p,.mv-mac .mp,.mac .p{background:#EBD3D3!important;color:#8A3F47!important}
+.mcp .c,.mv-mac .mc2,.mac .c{background:#F1E3C4!important;color:#806222!important}
+.mcp .g,.mv-mac .mg,.mac .g{background:#DDE1CC!important;color:#4A5230!important}
+/* avisos */
+.info{background:var(--av2)!important;color:var(--tx)!important;border-radius:var(--r1)!important;border:0!important}
+.alert,.alerta{border-radius:var(--r1)!important}
+/* resumo escuro da revisão */
+.admsum{background:var(--v)!important;border-radius:var(--r2)!important}
+
+/* apresentação: arte menor e, no computador, em duas colunas */
+.lp-art{max-width:360px!important}
+@media(min-width:900px){
+ main:has(.lp-hero){max-width:1040px}
+ .lp-hero{display:grid;grid-template-columns:1.1fr .9fr;grid-template-rows:1fr auto auto auto auto 1fr;column-gap:56px;min-height:62vh}
+ .lp-hero>.n{grid-column:1;grid-row:2}.lp-hero>h2{grid-column:1;grid-row:3}.lp-hero>p{grid-column:1;grid-row:4}.lp-hero>.lp-btns{grid-column:1;grid-row:5}
+ .lp-hero>.lp-art{grid-column:2;grid-row:1/-1;align-self:center;margin:0!important}
+ .lp-hero h2{font-size:60px!important}
+ .lp-sec,.lp-cta{max-width:640px;margin-left:auto;margin-right:auto}
+ .lp-cards{grid-template-columns:repeat(3,1fr)}.lp-cards>div{grid-template-columns:1fr;text-align:left}.lp-cards svg{grid-row:auto}
+}
 </style>
 </head>
 <body>
 <main>
   <button id="btnVoltar" class="voltar" style="display:none" onclick="voltar()" aria-label="Voltar">‹ Voltar</button>
   <div class="top"><div class="pill"><span class="av" id="av">N</span><span id="hi">Nutri</span></div><div class="lp-mark">nutrij<span class="a">a<svg viewBox="0 0 20 20"><use href="#oj-folhaC"/></svg></span></div></div>
+  <div class="ola" id="ola"></div>
   <h1 id="titulo">Nutri</h1>
   <div class="sub" id="hello">Eu monto sua dieta e reviso cada detalhe.</div>
 
@@ -1050,9 +1130,9 @@ h1,h2{font-weight:500!important;letter-spacing:0!important}
 
 <nav>
   <button data-t="inicio" aria-label="Início"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Início</span></button>
-  <button data-t="dieta" aria-label="Dieta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="#eee6da" stroke="#6b2e38"/><circle cx="12" cy="12" r="5" fill="#fbf9f5" stroke="#abb394"/><circle cx="12" cy="12" r="1.8" fill="#6b2e38" stroke="#6b2e38"/></svg><span>Dieta</span></button>
+  <button data-t="dieta" aria-label="Dieta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/></svg><span>Dieta</span></button>
   <button data-t="alimentos" aria-label="Alimentos"><svg viewBox="0 0 24 24"><path d="M12 8c-2-2.5-7-1.5-7 3 0 4.5 3 9 7 9s7-4.5 7-9c0-4.5-5-5.5-7-3z"/><path d="M12 8c0-2 1-4 3-5"/></svg><span>Alimentos</span></button>
-  <button data-t="receitas" aria-label="Receitas"><svg viewBox="0 0 24 24"><path d="M7.5 11.5C6 8.5 7.5 5.5 11 5c1 3-.5 5.500-3.500 6.500z" fill="#a9b57c" stroke="#5d6a54"/><path d="M12.500 11.500c-.5-3 1.500-5.500 5-5.500.5 3-1.500 5.500-5 5.500z" fill="#8a9a5b" stroke="#5d6a54"/><circle cx="16.500" cy="10" r="1.700" fill="#6b2e38" stroke="#6b2e38"/><path d="M3.500 12.500h17a8.500 8.500 0 0 1-17 0z" fill="#e3e8dc" stroke="#5d6a54"/><path d="M8 21h8" stroke="#5d6a54"/></svg><span>Receitas</span></button>
+  <button data-t="receitas" aria-label="Receitas"><svg viewBox="0 0 24 24"><path d="M3.5 12.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9 12c-1.5-2.5-.5-5.5 2.5-6M13.5 12c0-2.5 2-4.5 5-4.5"/></svg><span>Receitas</span></button>
   <button data-t="compras" aria-label="Compras"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg><span>Compras</span></button>
   <button data-t="dados" aria-label="Eu"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>Eu</span></button>
 </nav>
@@ -1245,7 +1325,7 @@ const PRATOS={BR:{
 /* ===== Utilitários ===== */
 const $=id=>document.getElementById(id);
 const num=v=>+String(v).replace(',','.')||0;
-const VERSAO='22'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
+const VERSAO='23'; /* sobe a cada publicação; o app se atualiza sozinho quando há versão nova */
 const DEMO=/[?&]demo(=|&|$)/.test(location.search); /* ?demo abre o app como uma paciente de exemplo, sem tocar nos dados reais */
 const PFX=DEMO?'nutridemo_':'nutri3_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(PFX+k))??d}catch(e){return d}};
@@ -2824,7 +2904,7 @@ function renderInicio(){
 /* ===== Navegação ===== */
 const TABS=['inicio','dieta','alimentos','objetivo','compras','receitas','progresso','dados','admin'];
 function nomeAtual(){const d=(dados&&dados.nome!=='Você')?dados.nome:'';return nomeRascunho||d;}
-function mostrarNome(){const nc=nomeAtual(),n=nc.split(/\s+/)[0];$('hi').textContent=n?'Olá, '+n:'Olá';$('av').textContent=n?n.charAt(0).toUpperCase():'N';}
+function mostrarNome(){const nc=nomeAtual(),n=nc.split(/\s+/)[0];$('hi').textContent=n?'Olá, '+n:'Olá';try{const hr=new Date().getHours();$('ola').textContent=n?(hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite')+', '+n:'';}catch(e){}$('av').textContent=n?n.charAt(0).toUpperCase():'N';}
 function saudar(){nomeRascunho=$('nome').value.trim();save('nome',nomeRascunho);mostrarNome();}
 function preencherForm(){
   if(dados){$('aceite').checked=true;$('caneta').checked=!!dados.caneta;}
