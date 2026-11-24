@@ -1006,6 +1006,12 @@ nav button svg *{fill:none!important;stroke:currentColor!important}
 .oj-ph img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:24px 24px 0 0;display:block}
 
 button.back{background:none!important;color:var(--v)!important;padding:4px 0!important;font:600 14px var(--ff)!important;box-shadow:none!important;min-height:0!important}
+body.gate nav{display:none}
+body.gate .gate-hide{display:none!important}
+body.gate main{padding-bottom:40px}
+.oj-volta{position:absolute;top:calc(16px + env(safe-area-inset-top));left:18px;z-index:5;font:600 12.5px "Manrope",sans-serif;background:rgba(255,255,255,.8);color:#5c5355;border:0;border-radius:999px;padding:7px 14px;min-height:0}
+#pagamento .pg-passos{display:flex;gap:8px;margin:4px 0 14px;font-size:12px;color:#908780}
+#pagamento .pg-passos b{color:#6b2e38}
 </style>
 </head>
 <body>
@@ -1018,7 +1024,7 @@ button.back{background:none!important;color:var(--v)!important;padding:4px 0!imp
 
   <!-- MEUS DADOS -->
   <section id="dados" class="hide">
-    <div class="row" style="margin-bottom:6px"><button class="light" onclick="tab('objetivo')">Meu objetivo</button><button class="light" onclick="tab('progresso')">Meu progresso</button></div>
+    <div class="row gate-hide" style="margin-bottom:6px"><button class="light" onclick="tab('objetivo')">Meu objetivo</button><button class="light" onclick="tab('progresso')">Meu progresso</button></div>
     <div class="card">
       <h2>Me conte sobre <em>você</em></h2>
       <div class="sub">Com essas informações eu monto o seu plano e reviso cada detalhe antes de liberar.</div>
@@ -1058,7 +1064,19 @@ button.back{background:none!important;color:var(--v)!important;padding:4px 0!imp
       <input id="dislikes" placeholder="ex.: peixe, tofu, lentilha (separe por vírgula)">
       <label class="aceite"><input type="checkbox" id="aceite"><span>Concordo que a nutricionista guarde e use os meus dados de saúde para montar o meu plano. Posso apagá-los quando quiser.</span></label>
       <button class="full" onclick="salvarDados()">Enviar meus dados</button>
-      <button class="light full" style="margin-top:10px" onclick="apagarDados()">Apagar meus dados e voltar ao início</button>
+      <button class="light full gate-hide" style="margin-top:10px" onclick="apagarDados()">Apagar meus dados e voltar ao início</button>
+    </div>
+  </section>
+
+  <!-- PAGAMENTO (etapa antes de liberar o app) -->
+  <section id="pagamento" class="hide">
+    <div class="card">
+      <div class="pg-passos"><span>1. Seus dados</span><span>›</span><span><b>2. Pagamento</b></span><span>›</span><span>3. Seu plano</span></div>
+      <h2>Falta só o <em>pagamento</em></h2>
+      <div class="sub">Recebi os seus dados. Assim que o pagamento for confirmado, eu libero o app e preparo o seu plano.</div>
+      <div class="info" style="margin-top:12px">Simulação: nenhum valor será cobrado. A cobrança de verdade entra em breve.</div>
+      <button class="full" id="pgBtn" style="margin-top:14px" onclick="pagamentoIr()">Ir para o pagamento</button>
+      <button class="light full" id="pgTeste" style="margin-top:10px;display:none" onclick="pagamentoOk()">Liberar acesso (modo de teste)</button>
     </div>
   </section>
 
@@ -1139,6 +1157,7 @@ button.back{background:none!important;color:var(--v)!important;padding:4px 0!imp
   <p>Comer bem. Já.</p>
  </div>
  <div class="oj-t oj-bv" id="oj1">
+  <button class="oj-volta" onclick="ojVolta()">‹ Voltar</button>
   <button class="oj-pular" onclick="ojIr(4)">Pular</button>
   <div class="oj-slides" id="ojSl">
    <div class="oj-sl"><div class="oj-art" style="background:#E6DCCB"><div class="oj-ph"><img src="imagens/tour/cardapio.jpg" alt=""></div></div>
@@ -1151,6 +1170,7 @@ button.back{background:none!important;color:var(--v)!important;padding:4px 0!imp
   <div class="oj-pe"><div class="oj-dots" id="ojDots"><i class="on"></i><i></i><i></i></div><button class="oj-nx" onclick="ojProx()" aria-label="Próximo"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h10M10 5l4 4-4 4"/></svg></button></div>
  </div>
  <div class="oj-t oj-ent" id="oj4">
+  <button class="oj-volta" onclick="ojVolta()">‹ Voltar</button>
   <div class="oj-hd">
    <svg class="oj-il" style="width:34%;left:-6%;bottom:-4%;--fill:transparent;--line:#F2EBE0" viewBox="0 0 120 150"><use href="#oj-pera"/></svg>
    <svg class="oj-il" style="width:34%;right:-8%;top:8%;--fill:transparent;--line:#F2EBE0" viewBox="0 0 140 160"><use href="#oj-brocolis"/></svg>
@@ -1271,7 +1291,7 @@ RECEITAS.forEach(r=>{r.ing=r.ing.map(([id,g])=>[id,arred(F[id],g)]);});
    Textos da interface em IDIOMA; pratos habituais em PRATOS por país. Para a Espanha: adicionar I18N.es e PRATOS.ES. */
 const IDIOMA='pt', PAIS='BR';
 const I18N={pt:{
-  titulos:{alimentos:'<em>Alimentos</em>',inicio:'Comer bem, <em>do seu jeito</em>',dieta:'Seu <em>plano</em> de hoje',objetivo:'Meu <em>objetivo</em>',compras:'Compras <em>da semana</em>',receitas:'Receitas <em>para o dia a dia</em>',progresso:'Minha <em>evolução</em>',dados:'Vamos nos <em>conhecer</em>',admin:'Área da <em>nutricionista</em>'},
+  titulos:{alimentos:'<em>Alimentos</em>',inicio:'Comer bem, <em>do seu jeito</em>',dieta:'Seu <em>plano</em> de hoje',objetivo:'Meu <em>objetivo</em>',compras:'Compras <em>da semana</em>',receitas:'Receitas <em>para o dia a dia</em>',progresso:'Minha <em>evolução</em>',dados:'Vamos nos <em>conhecer</em>',pagamento:'<em>Pagamento</em>',admin:'Área da <em>nutricionista</em>'},
   refeicoes:{cafe:'Café da manhã',lanchem:'Lanche da manhã',almoco:'Almoço',lanche:'Lanche da tarde',jantar:'Jantar',ceia:'Ceia'},
   dicas:{
    cafe:['Eu gosto de começar o dia com um copo de água antes de comer.','Sem pressa: mastigar devagar deixa a refeição mais saborosa e saciante.'],
@@ -1844,6 +1864,7 @@ function salvarDados(){
     atv:+$('atv').value,obj:$('obj').value,refs:+$('refs').value,ajuste:0,formula:(dados&&dados.formula)||'auto',
     restr:[...document.querySelectorAll('#restr input:checked')].map(i=>i.value),caneta:$('caneta').checked,
     dislikes:$('dislikes').value.toLowerCase().split(',').map(s=>s.trim()).filter(Boolean)};
+  const primeiraVez=!nutriMode&&(!dados||pgPend());
   if(!novo.nome){alert('Me diga como posso te chamar.');$('nome').focus();return;}
   if(NUVEM&&!$('aceite').checked){alert('Para enviar, marque o aceite sobre o uso dos seus dados.');return;}
   if(!(novo.idade>=18)){alert('Por enquanto eu atendo apenas pessoas com 18 anos ou mais.');return;}
@@ -1861,7 +1882,7 @@ function salvarDados(){
   checks={};save('checks',checks);
   logH('dados','Cliente enviou os dados: '+({emagrecer:'emagrecer',ganhar:'ganhar massa',manter:'manter o peso'})[dados.obj]+(dados.metaKg?', meta de '+br(dados.metaKg)+' kg (peso desejado '+br(dados.metaPeso||0)+' kg)':'')+'; '+dados.peso+' kg, '+dados.altura+' cm.');
   logH('dieta','Dieta gerada automaticamente ('+dieta.meta.kcal+' kcal de meta).');
-  tab('dieta');
+  if(primeiraVez){try{localStorage.setItem(PFX+'pgPend','1')}catch(e){}tab('pagamento');}else tab('dieta');
 }
 
 function ring(t,meta){
@@ -2975,7 +2996,7 @@ function renderInicio(){
 }
 
 /* ===== Navegação ===== */
-const TABS=['inicio','dieta','alimentos','objetivo','compras','receitas','progresso','dados','admin'];
+const TABS=['pagamento','inicio','dieta','alimentos','objetivo','compras','receitas','progresso','dados','admin'];
 function nomeAtual(){const d=(dados&&dados.nome!=='Você')?dados.nome:'';return nomeRascunho||d;}
 function mostrarNome(){const nc=nomeAtual(),n=nc.split(/\s+/)[0];$('hi').textContent=n?'Olá, '+n:'Olá';try{const hr=new Date().getHours();$('ola').textContent=n?(hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite')+', '+n:'';}catch(e){}$('av').textContent=n?n.charAt(0).toUpperCase():'N';}
 function saudar(){nomeRascunho=$('nome').value.trim();save('nome',nomeRascunho);mostrarNome();}
@@ -2990,8 +3011,20 @@ function preencherForm(){
   formMeta();saudar();
 }
 let navStack=[],tabAtual=null;
+const pgPend=()=>!!load('pgPend',null);
+const emGate=()=>!nutriMode&&(!dados||pgPend());
+const LINK_PAGAMENTO='';
+function pagamentoIr(){if(LINK_PAGAMENTO){window.open(LINK_PAGAMENTO,'_blank');return;}
+  const b=$('pgBtn');b.disabled=true;b.textContent='Processando pagamento...';setTimeout(()=>{b.disabled=false;b.textContent='Ir para o pagamento';pagamentoOk();},1800);}
+function pagamentoOk(){try{localStorage.removeItem(PFX+'pgPend')}catch(e){}tab('dieta');}
 function tab(t,semEmpilhar){
   verApres=false;
+  if(emGate()){
+    if(pgPend()&&dados){if(t!=='dados'&&t!=='pagamento')t='pagamento';}
+    else if(t!=='inicio'&&t!=='dados')t='inicio';
+  }else if(t==='pagamento')t='dieta';
+  document.body.classList.toggle('gate',emGate());
+  $('pgTeste').style.display=/[?&]teste/.test(location.search)?'':'none';
   if(typeof fecharAlimento==='function')fecharAlimento();
   if(t==='admin'&&!nutriMode)t='inicio';
   if(!semEmpilhar&&tabAtual&&tabAtual!==t){navStack.push(tabAtual);if(navStack.length>25)navStack.shift();}
@@ -3112,6 +3145,7 @@ function ojIr(i){ojCur=i;
   if(i>=1&&i<=3){ojMostra('oj1');$('ojSl').style.transform='translateX('+(-(i-1)*100)+'%)';[...$('ojDots').children].forEach((d,k)=>d.classList.toggle('on',k===i-1));}
   else if(i===4)ojMostra('oj4');else ojMostra('oj0');}
 function ojTour(){const o=$('oj');o.style.opacity='';o.classList.add('on');ojIr(1);}
+function ojVolta(){if(ojCur>1)ojIr(ojCur-1);else{const o=$('oj');o.style.transition='opacity .3s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},300);}}
 function ojProx(){ojIr(Math.min(4,ojCur+1));}
 function ojFecha(){try{localStorage.setItem(PFX+'onb','1')}catch(e){}const o=$('oj');o.style.transition='opacity .4s';o.style.opacity='0';setTimeout(()=>{o.classList.remove('on');o.style.opacity='';},400);}
 function ojFim(dest){ojFecha();if(dest==='dados')tab('dados');else if(dest==='nutri')entrarNutri();}
